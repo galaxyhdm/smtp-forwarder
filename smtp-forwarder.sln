@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataLayer", "DataLayer\Data
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{11B88B88-3FA9-4084-86F4-3933117180AD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmtpReceiverServer", "SmtpReceiverServer\SmtpReceiverServer.csproj", "{CE8A81EB-585C-45A1-A34C-E723961026F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{11B88B88-3FA9-4084-86F4-3933117180AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11B88B88-3FA9-4084-86F4-3933117180AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11B88B88-3FA9-4084-86F4-3933117180AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE8A81EB-585C-45A1-A34C-E723961026F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE8A81EB-585C-45A1-A34C-E723961026F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE8A81EB-585C-45A1-A34C-E723961026F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE8A81EB-585C-45A1-A34C-E723961026F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
