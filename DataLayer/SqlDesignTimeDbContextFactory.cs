@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Application.Utils;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace DataLayer;
@@ -8,8 +9,9 @@ internal class SqlDesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDb
 
     public AppDbContext CreateDbContext(string[] args)
     {
+        var connectionString = Env.GetStringRequired("SQL_CONNECTION");
         var options = new DbContextOptionsBuilder()
-            .UseNpgsql("", builder =>
+            .UseNpgsql(connectionString, builder =>
                 builder.MigrationsHistoryTable("_EFMigrationsHistory"))
             .UseSnakeCaseNamingConvention()
             .Options;

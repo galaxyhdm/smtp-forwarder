@@ -24,6 +24,11 @@ public class UserConfig : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.PasswordHash)
             .IsRequired();
+
+        builder.Property(u => u.LastUpdatedUtc)
+            .IsRequired();
+        builder.Property(u => u.CreatedUtc)
+            .IsRequired();
         
         // keys and indexes
         builder.HasKey(u => u.UserId);
