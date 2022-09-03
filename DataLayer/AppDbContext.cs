@@ -14,6 +14,8 @@ public class AppDbContext : DbContext, IAppContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<MailBox> MailBoxes { get; set; }
+    public DbSet<ForwardTarget> ForwardTargets { get; set; }
+    public DbSet<ForwardingAddress> ForwardingAddresses { get; set; }
 
     public async Task<bool> CanConnectAsync() => await Database.CanConnectAsync();
 
