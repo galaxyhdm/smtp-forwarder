@@ -11,7 +11,7 @@ internal sealed class MailBoxRepository : RootRepositoryBase<MailBox>, IMailBoxR
     public MailBoxRepository(AppDbContext context, ILogger<UserRepository> logger) : base(context)
     {
         Entities = context.Set<MailBox>()
-            .Include(m => m.User)
+            .Include(m => m.Owner)
             .AsQueryable();
 
         BeforeAdd += (_, args) => args.Entity.LogCreatedUpdated(true);

@@ -12,14 +12,14 @@ public class MailBox : EntityBase
 
     // ------------------------------
     // Relationships
-    public Guid? UserId { get; }
-    public User? User { get; private set; }
+    public Guid? OwnerId { get; }
+    public User? Owner { get; private set; }
 
     public MailBox()
     {
     }
 
-    private MailBox(Guid mailBoxId, string mailAddress, string authName, byte[] passwordHash, User user)
+    private MailBox(Guid mailBoxId, string mailAddress, string authName, byte[] passwordHash, User owner)
     {
         MailBoxId = mailBoxId;
         Enabled = true;
@@ -27,7 +27,7 @@ public class MailBox : EntityBase
         SetMailAddress(mailAddress);
         UpdateAuthName(authName);
         UpdatePasswordHash(passwordHash);
-        LinkWithUser(user);
+        LinkWithUser(owner);
     }
 
     public static MailBox CreateMailBox(string mailAddress, string authName, byte[] passwordHash, User user)
@@ -64,7 +64,7 @@ public class MailBox : EntityBase
         DeleteTimeUtc = dateTime ?? DateTime.UtcNow;
     }
 
-    private void LinkWithUser(User user) =>
-        User = user;
+    private void LinkWithUser(User owner) =>
+        Owner = owner;
 
 }

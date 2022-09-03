@@ -39,10 +39,10 @@ public class MailBoxConfig : IEntityTypeConfiguration<MailBox>
         builder.HasIndex(m => m.AuthName);
 
         // relationships
-        builder.HasOne(m => m.User)
+        builder.HasOne(m => m.Owner)
             .WithMany()
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false)
-            .HasForeignKey(m => m.UserId);
+            .HasForeignKey(m => m.OwnerId);
     }
 }
