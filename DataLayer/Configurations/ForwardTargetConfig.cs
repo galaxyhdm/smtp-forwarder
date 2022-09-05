@@ -30,7 +30,7 @@ public class ForwardTargetConfig : IEntityTypeConfiguration<ForwardTarget>
         
         // keys and indexes
         builder.HasKey(f => f.Id);
-        builder.HasIndex(f => f.Name).IsUnique();
+        builder.HasIndex(f => f.Name);
 
         // relationships
         builder.HasOne(f => f.Owner)

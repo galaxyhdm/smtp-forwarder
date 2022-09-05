@@ -16,7 +16,29 @@ public class ForwardingAddress : EntityBase
     public Guid? ForwardTargetId { get; }
     public ForwardTarget? ForwardTarget { get; private set; }
 
-    public ForwardingAddress()
+    private ForwardingAddress()
     {
     }
+    
+    private void SetLocalAddressPart(string localAddressPart)
+    {
+        if(string.IsNullOrWhiteSpace(localAddressPart))
+            throw new ArgumentException("Must have a value.", nameof(localAddressPart));
+
+        LocalAddressPart = localAddressPart;
+    }
+    
+    public void SetEnabled(bool enabled) =>
+        Enabled = enabled;
+    
+    public void SetDeleteTime(DateTime? dateTime = null)
+    {
+        DeleteTimeUtc = dateTime ?? DateTime.UtcNow;
+    }
+
+    public void LinkWithOwner(User owner) =>
+        Owner = owner;
+
+    public void LinkWithTarget(ForwardTarget? forwardTarget) =>
+        ForwardTarget = forwardTarget;
 }
