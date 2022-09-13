@@ -1,4 +1,5 @@
 using Application;
+using SmtpReceiverServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,8 @@ builder.Services.AddSwaggerGen();
 
 // Add application event system
 builder.Services.AddEvents(typeof(ServiceInjector).Assembly);
+
+builder.Services.AddSmtpService();
 
 var app = builder.Build();
 
