@@ -1,4 +1,6 @@
 using Application;
+using Application.Utils;
+using DataLayer.Extensions;
 using SmtpReceiverServer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,8 +12,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Database
+builder.Services.AddAppContext(Env.GetStringRequired("SQL_CONNECTION"));
+builder.Services.AddRepositories();
+
 // Add application event system
 builder.Services.AddEvents(typeof(ServiceInjector).Assembly);
+
+builder.Services.AddAuthorizationHandlers();
 
 builder.Services.AddSmtpService();
 

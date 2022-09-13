@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using Application.Authorization;
+using Application.Interfaces.Authorization;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,5 +12,11 @@ public static class ServiceInjector
     {
         serviceCollection.AddMediatR(assembly);
         return serviceCollection;
+    }
+    
+    public static IServiceCollection AddAuthorizationHandlers(this IServiceCollection services) {
+        services.AddSingleton<IPasswordHasher, Argon2Hasher>();
+        //services.AddSingleton<IAuthTokenGenerator, AuthTokenGenerator>();
+        return services;
     }
 }
