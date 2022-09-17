@@ -1,9 +1,14 @@
+using NLog.Web;
 using SmtpForwarder.Application;
 using SmtpForwarder.Application.Utils;
 using SmtpForwarder.DataLayer.Extensions;
 using SmtpForwarder.SmtpReceiverServer;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// NLog: Setup NLog for Dependency injection
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
 
 // Add services to the container.
 
