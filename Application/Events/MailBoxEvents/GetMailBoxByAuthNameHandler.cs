@@ -1,8 +1,8 @@
-﻿using Application.Interfaces.Repositories;
-using Domain;
-using MediatR;
+﻿using MediatR;
+using SmtpForwarder.Application.Interfaces.Repositories;
+using SmtpForwarder.Domain;
 
-namespace Application.Events.MailBoxEvents;
+namespace SmtpForwarder.Application.Events.MailBoxEvents;
 
 public record GetMailBoxByAuthName(string AuthName) : IRequest<MailBox?>;
 

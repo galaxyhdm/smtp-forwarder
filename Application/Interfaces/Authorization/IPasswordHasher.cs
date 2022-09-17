@@ -1,4 +1,4 @@
-﻿namespace Application.Interfaces.Authorization;
+﻿namespace SmtpForwarder.Application.Interfaces.Authorization;
 
 public interface IPasswordHasher
 {

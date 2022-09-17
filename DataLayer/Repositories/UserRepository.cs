@@ -1,8 +1,8 @@
-﻿using Application.Interfaces.Repositories;
-using Domain;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using SmtpForwarder.Application.Interfaces.Repositories;
+using SmtpForwarder.Domain;
 
-namespace DataLayer.Repositories;
+namespace SmtpForwarder.DataLayer.Repositories;
 
 internal sealed class UserRepository : RootRepositoryBase<User>, IUserRepository
 {

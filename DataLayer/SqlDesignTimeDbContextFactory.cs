@@ -1,8 +1,8 @@
-﻿using Application.Utils;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using SmtpForwarder.Application.Utils;
 
-namespace DataLayer;
+namespace SmtpForwarder.DataLayer;
 
 internal class SqlDesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {

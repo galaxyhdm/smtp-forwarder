@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using NLog;
-using SmtpReceiverServer.Authorization;
-using SmtpReceiverServer.Handlers;
+using SmtpForwarder.SmtpReceiverServer.Authorization;
+using SmtpForwarder.SmtpReceiverServer.Handlers;
 using SmtpServer;
 using SmtpServer.Authentication;
 using SmtpServer.Storage;
 
-namespace SmtpReceiverServer;
+namespace SmtpForwarder.SmtpReceiverServer;
 
 public static class SmtpInjector
 {

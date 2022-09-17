@@ -1,8 +1,8 @@
 ﻿using System.Text;
-using Application.Interfaces.Authorization;
 using Isopoh.Cryptography.Argon2;
+using SmtpForwarder.Application.Interfaces.Authorization;
 
-namespace Application.Authorization;
+namespace SmtpForwarder.Application.Authorization;
 
 internal class Argon2Hasher : IPasswordHasher
 {

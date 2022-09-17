@@ -4,7 +4,7 @@ using SmtpServer;
 using SmtpServer.Mail;
 using SmtpServer.Storage;
 
-namespace SmtpReceiverServer.Authorization;
+namespace SmtpForwarder.SmtpReceiverServer.Authorization;
 
 internal class IncomingMailboxFilter : IMailboxFilter
 {

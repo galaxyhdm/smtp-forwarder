@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
-using Application.Interfaces.Repositories;
-using DataLayer.Events;
 using Microsoft.EntityFrameworkCore;
+using SmtpForwarder.Application.Interfaces.Repositories;
+using SmtpForwarder.DataLayer.Events;
 
-namespace DataLayer.Repositories;
+namespace SmtpForwarder.DataLayer.Repositories;
 
 internal abstract class RootRepositoryBase<TEntity> : IRepository<TEntity> where TEntity : class
 {

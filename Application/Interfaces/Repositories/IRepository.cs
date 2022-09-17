@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Application.Interfaces.Repositories;
+namespace SmtpForwarder.Application.Interfaces.Repositories;
 
 public interface IRepository<TEntity> where  TEntity : class
 {

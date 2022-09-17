@@ -1,7 +1,7 @@
-﻿using Application.Interfaces.Authorization;
-using MediatR;
+﻿using MediatR;
+using SmtpForwarder.Application.Interfaces.Authorization;
 
-namespace Application.Events.AuthorizationEvents;
+namespace SmtpForwarder.Application.Events.AuthorizationEvents;
 
 public record GetPasswordHash(string Password) : IRequest<byte[]>;
 

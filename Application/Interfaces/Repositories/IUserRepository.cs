@@ -1,6 +1,6 @@
-﻿using Domain;
+﻿using SmtpForwarder.Domain;
 
-namespace Application.Interfaces.Repositories;
+namespace SmtpForwarder.Application.Interfaces.Repositories;
 
 public interface IUserRepository : IRepository<User>
 {

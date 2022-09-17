@@ -5,7 +5,7 @@ using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
 
-namespace SmtpReceiverServer.Handlers;
+namespace SmtpForwarder.SmtpReceiverServer.Handlers;
 
 internal class IncomingMailHandler : IMessageStore
 {

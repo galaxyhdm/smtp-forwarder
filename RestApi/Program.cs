@@ -1,7 +1,7 @@
-using Application;
-using Application.Utils;
-using DataLayer.Extensions;
-using SmtpReceiverServer;
+using SmtpForwarder.Application;
+using SmtpForwarder.Application.Utils;
+using SmtpForwarder.DataLayer.Extensions;
+using SmtpForwarder.SmtpReceiverServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +19,8 @@ builder.Services.AddRepositories();
 // Add application event system
 builder.Services.AddEvents(typeof(ServiceInjector).Assembly);
 
+// Services
 builder.Services.AddAuthorizationHandlers();
-
 builder.Services.AddSmtpService();
 
 var app = builder.Build();

@@ -1,11 +1,11 @@
-﻿using Application.Events.AuthorizationEvents;
-using Application.Events.MailBoxEvents;
-using MediatR;
+﻿using MediatR;
 using NLog;
+using SmtpForwarder.Application.Events.AuthorizationEvents;
+using SmtpForwarder.Application.Events.MailBoxEvents;
 using SmtpServer;
 using SmtpServer.Authentication;
 
-namespace SmtpReceiverServer.Authorization;
+namespace SmtpForwarder.SmtpReceiverServer.Authorization;
 
 internal class SmtpUserAuthenticator : IUserAuthenticator
 {
@@ -22,6 +22,8 @@ internal class SmtpUserAuthenticator : IUserAuthenticator
     {
         Log.Debug("Starting mailbox authentication. ({})", user);
 
+        //await _mediator.Send(new CreateMailBox("test@markusk.dev", "auth1234", "auth1234", null));
+        
         var mailBox = await _mediator.Send(new GetMailBoxByAuthName(user), cancellationToken);
         if (mailBox == null)
         {

@@ -1,4 +1,4 @@
-﻿namespace Domain;
+﻿namespace SmtpForwarder.Domain;
 
 public class MailBox : EntityBase
 {
@@ -19,7 +19,7 @@ public class MailBox : EntityBase
     {
     }
 
-    private MailBox(Guid mailBoxId, string mailAddress, string authName, byte[] passwordHash, User owner)
+    private MailBox(Guid mailBoxId, string mailAddress, string authName, byte[] passwordHash, User? owner)
     {
         MailBoxId = mailBoxId;
         Enabled = true;
@@ -30,7 +30,7 @@ public class MailBox : EntityBase
         LinkWithUser(owner);
     }
 
-    public static MailBox CreateMailBox(string mailAddress, string authName, byte[] passwordHash, User user)
+    public static MailBox CreateMailBox(string mailAddress, string authName, byte[] passwordHash, User? user)
     {
         var id = Guid.NewGuid();
         var mailBox = new MailBox(id, mailAddress, authName, passwordHash, user);
@@ -64,7 +64,7 @@ public class MailBox : EntityBase
         DeleteTimeUtc = dateTime ?? DateTime.UtcNow;
     }
 
-    private void LinkWithUser(User owner) =>
+    private void LinkWithUser(User? owner) =>
         Owner = owner;
 
 }

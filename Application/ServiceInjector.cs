@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
-using Application.Authorization;
-using Application.Interfaces.Authorization;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using SmtpForwarder.Application.Authorization;
+using SmtpForwarder.Application.Interfaces.Authorization;
 
-namespace Application;
+namespace SmtpForwarder.Application;
 
 public static class ServiceInjector
 {

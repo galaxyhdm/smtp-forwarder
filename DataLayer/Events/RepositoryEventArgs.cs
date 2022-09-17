@@ -1,4 +1,4 @@
-﻿namespace DataLayer.Events;
+﻿namespace SmtpForwarder.DataLayer.Events;
 
 public class SavingEventArgs<TEntity> : EventArgs where TEntity : class
 {

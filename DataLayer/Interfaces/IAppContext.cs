@@ -1,4 +1,4 @@
-﻿namespace DataLayer.Interfaces;
+﻿namespace SmtpForwarder.DataLayer.Interfaces;
 
 public interface IAppContext
 {

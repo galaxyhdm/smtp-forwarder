@@ -1,9 +1,9 @@
-﻿using DataLayer.Interfaces;
-using Domain;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SmtpForwarder.DataLayer.Interfaces;
+using SmtpForwarder.Domain;
 
-namespace DataLayer;
+namespace SmtpForwarder.DataLayer;
 
 public class AppDbContext : DbContext, IAppContext
 {

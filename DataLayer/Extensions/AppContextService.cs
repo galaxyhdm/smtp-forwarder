@@ -1,9 +1,9 @@
-﻿using Application.Interfaces.Repositories;
-using DataLayer.Repositories;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SmtpForwarder.Application.Interfaces.Repositories;
+using SmtpForwarder.DataLayer.Repositories;
 
-namespace DataLayer.Extensions;
+namespace SmtpForwarder.DataLayer.Extensions;
 
 public static class AppContextService
 {

@@ -1,4 +1,4 @@
-﻿namespace Application.Utils;
+﻿namespace SmtpForwarder.Application.Utils;
 
 public class Env
 {

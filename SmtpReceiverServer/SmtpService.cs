@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace SmtpReceiverServer;
+namespace SmtpForwarder.SmtpReceiverServer;
 
 public class SmtpService : BackgroundService
 {

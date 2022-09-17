@@ -1,9 +1,9 @@
-﻿using Application.Interfaces.Repositories;
-using Domain;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SmtpForwarder.Application.Interfaces.Repositories;
+using SmtpForwarder.Domain;
 
-namespace DataLayer.Repositories;
+namespace SmtpForwarder.DataLayer.Repositories;
 
 internal sealed class MailBoxRepository : RootRepositoryBase<MailBox>, IMailBoxRepository
 {

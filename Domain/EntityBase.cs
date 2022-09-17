@@ -1,4 +1,4 @@
-﻿namespace Domain;
+﻿namespace SmtpForwarder.Domain;
 
 internal interface IEntityBase
 {

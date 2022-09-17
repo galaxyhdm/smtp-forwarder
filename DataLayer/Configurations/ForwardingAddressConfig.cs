@@ -1,8 +1,8 @@
-﻿using Domain;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SmtpForwarder.Domain;
 
-namespace DataLayer.Configurations;
+namespace SmtpForwarder.DataLayer.Configurations;
 
 public class ForwardingAddressConfig : IEntityTypeConfiguration<ForwardingAddress>
 {
