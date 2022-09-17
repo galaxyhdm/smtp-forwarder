@@ -5,7 +5,7 @@ using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Events.MailBoxEvents;
 
-public record CreateMailBox(string MailAddress, string AuthName, string Password, Guid? UserId) : IRequest<MailBox?>;
+public record CreateMailBox(string LocalAddressPart, string AuthName, string Password, Guid? UserId) : IRequest<MailBox?>;
 
 public class CreateMailBoxHandler : IRequestHandler<CreateMailBox, MailBox?>
 {
@@ -21,11 +21,11 @@ public class CreateMailBoxHandler : IRequestHandler<CreateMailBox, MailBox?>
 
     public async Task<MailBox?> Handle(CreateMailBox request, CancellationToken cancellationToken)
     {
-        request.Deconstruct(out string mailAddress, out string authName, out string password, out Guid? user);
+        request.Deconstruct(out var localAddressPart, out var authName, out var password, out var user);
 
         var passwordHash = await _mediator.Send(new GetPasswordHash(password), cancellationToken);
 
-        var mailBox = MailBox.CreateMailBox(mailAddress, authName, passwordHash, null);
+        var mailBox = MailBox.CreateMailBox(localAddressPart, authName, passwordHash, null);
 
         var success = await _repository.AddAsync(mailBox);
         return success ? mailBox : null;

@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using NLog;
+using SmtpForwarder.Application;
 using SmtpForwarder.Application.Events.AuthorizationEvents;
 using SmtpForwarder.Application.Events.MailBoxEvents;
 using SmtpServer;
@@ -18,14 +19,15 @@ internal class SmtpUserAuthenticator : IUserAuthenticator
         _mediator = mediator;
     }
 
-    public async Task<bool> AuthenticateAsync(ISessionContext context, string user, string password, CancellationToken cancellationToken)
+    public async Task<bool> AuthenticateAsync(ISessionContext context, string user, string password,
+        CancellationToken cancellationToken)
     {
         Log.Debug("Starting mailbox authentication. ({})", user);
 
-        //await _mediator.Send(new CreateMailBox("test@markusk.dev", "auth1234", "auth1234", null));
-        
+        //await _mediator.Send(new CreateMailBox("test", "auth1234", "auth1234", null));
+
         var mailBox = await _mediator.Send(new GetMailBoxByAuthName(user), cancellationToken);
-        if (mailBox == null)
+        if (mailBox is not {Enabled: true})
         {
             Log.Debug("Mailbox not found. ({})", user);
             await _mediator.Send(new GetPasswordHash(""), cancellationToken);
@@ -33,9 +35,9 @@ internal class SmtpUserAuthenticator : IUserAuthenticator
         }
 
         var auth = await _mediator.Send(new ValidatePassword(password, mailBox.PasswordHash), cancellationToken);
-        
+
         Log.Debug($"Auth request finished. ({user} | {mailBox.MailAddress} | {auth.ToString().ToLower()})");
-        //if (auth) context.Properties.Add(Constants.InternalMailBoxKey, mailBox);
+        if (auth) context.Properties.Add(Constants.InternalMailBoxKey, mailBox);
         return auth;
     }
 }

@@ -20,6 +20,7 @@ internal class IncomingMailHandler : IMessageStore
     public Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer,
         CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
+        return Task.FromResult(SmtpResponse.Ok);
     }
 }

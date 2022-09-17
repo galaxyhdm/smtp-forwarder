@@ -18,10 +18,10 @@ internal sealed class MailBoxRepository : RootRepositoryBase<MailBox>, IMailBoxR
         BeforeUpdate += (_, args) => args.Entity.LogCreatedUpdated();
         BeforeSave += (_, args) => logger.LogDebug("Saving mailbox {} - {}",
             args.Entity.MailBoxId,
-            args.Entity.MailAddress);
+            args.Entity.LocalAddressPart);
     }
 
-    public async Task<MailBox?> GetMailBoxAsync(string mailAddress) =>
-        await GetAsync(m => m.MailAddress == mailAddress);
+    public async Task<MailBox?> GetMailBoxAsync(string localAddressPart) =>
+        await GetAsync(m => m.LocalAddressPart == localAddressPart);
 
 }

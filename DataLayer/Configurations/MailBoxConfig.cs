@@ -14,7 +14,7 @@ public class MailBoxConfig : IEntityTypeConfiguration<MailBox>
         builder.Property(m => m.MailBoxId)
             .IsRequired();
 
-        builder.Property(m => m.MailAddress)
+        builder.Property(m => m.LocalAddressPart)
             .IsRequired();
 
         builder.Property(m => m.AuthName)
@@ -35,7 +35,7 @@ public class MailBoxConfig : IEntityTypeConfiguration<MailBox>
         
         // keys and indexes
         builder.HasKey(m => m.MailBoxId);
-        builder.HasIndex(m => m.MailAddress).IsUnique();
+        builder.HasIndex(m => m.LocalAddressPart).IsUnique();
         builder.HasIndex(m => m.AuthName);
 
         // relationships

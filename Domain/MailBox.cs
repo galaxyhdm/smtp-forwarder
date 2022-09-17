@@ -4,7 +4,7 @@ public class MailBox : EntityBase
 {
 
     public Guid MailBoxId { get; }
-    public string MailAddress { get; private set; }
+    public string LocalAddressPart { get; private set; }
     public string AuthName { get; private set; }
     public byte[] PasswordHash { get; private set; }
     public bool Enabled { get; private set; }
@@ -15,25 +15,28 @@ public class MailBox : EntityBase
     public Guid? OwnerId { get; }
     public User? Owner { get; private set; }
 
+    //todo: set host part over evn or config
+    public string MailAddress => $"{LocalAddressPart}@test.lab";
+    
     public MailBox()
     {
     }
 
-    private MailBox(Guid mailBoxId, string mailAddress, string authName, byte[] passwordHash, User? owner)
+    private MailBox(Guid mailBoxId, string localAddressPart, string authName, byte[] passwordHash, User? owner)
     {
         MailBoxId = mailBoxId;
         Enabled = true;
         
-        SetMailAddress(mailAddress);
+        SetMailAddress(localAddressPart);
         UpdateAuthName(authName);
         UpdatePasswordHash(passwordHash);
         LinkWithUser(owner);
     }
 
-    public static MailBox CreateMailBox(string mailAddress, string authName, byte[] passwordHash, User? user)
+    public static MailBox CreateMailBox(string localAddressPart, string authName, byte[] passwordHash, User? user)
     {
         var id = Guid.NewGuid();
-        var mailBox = new MailBox(id, mailAddress, authName, passwordHash, user);
+        var mailBox = new MailBox(id, localAddressPart, authName, passwordHash, user);
         return mailBox;
     }
     
@@ -42,7 +45,7 @@ public class MailBox : EntityBase
         if(string.IsNullOrWhiteSpace(mailAddress))
             throw new ArgumentException("Must have a value.", nameof(mailAddress));
 
-        MailAddress = mailAddress;
+        LocalAddressPart = mailAddress;
     }
     
     public void UpdateAuthName(string authName)
