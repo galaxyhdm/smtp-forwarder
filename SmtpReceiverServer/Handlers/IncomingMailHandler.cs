@@ -2,6 +2,7 @@
 using MediatR;
 using NLog;
 using SmtpForwarder.Application;
+using SmtpForwarder.Application.Events.MessageEvents;
 using SmtpForwarder.Domain;
 using SmtpForwarder.SmtpReceiverServer.Extensions;
 using SmtpServer;
@@ -30,7 +31,6 @@ internal class IncomingMailHandler : IMessageStore
         if(mailBox is null)
             return SmtpResponse.AuthenticationFailed;
 
-        
         var message = await buffer.TryToMimeMessageAsync(cancellationToken);
         if(message is null)
             return SmtpResponse.SyntaxError;
@@ -40,8 +40,17 @@ internal class IncomingMailHandler : IMessageStore
 
         Log.Trace($"Subject={message.Subject}");
         Log.Trace($"Body={message.TextBody}");
-        
-        
-        return SmtpResponse.Ok;
+
+        var response = await _mediator.Send(new IncomingMessageRequest(message), cancellationToken);
+
+        return response switch
+        {
+            IncomingMessageResponse.Ok => SmtpResponse.Ok,
+            IncomingMessageResponse.MailboxNameNotAllowed => SmtpResponse.MailboxNameNotAllowed,
+            IncomingMessageResponse.MailboxUnavailable => SmtpResponse.MailboxUnavailable,
+            IncomingMessageResponse.NoValidRecipientsGiven => SmtpResponse.NoValidRecipientsGiven,
+            IncomingMessageResponse.SizeLimitExceeded => SmtpResponse.SizeLimitExceeded,
+            _ => SmtpResponse.TransactionFailed
+        };
     }
 }
