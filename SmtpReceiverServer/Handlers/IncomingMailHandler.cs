@@ -1,7 +1,11 @@
 ﻿using System.Buffers;
 using MediatR;
 using NLog;
+using SmtpForwarder.Application;
+using SmtpForwarder.Domain;
+using SmtpForwarder.SmtpReceiverServer.Extensions;
 using SmtpServer;
+using SmtpServer.Mail;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
 
@@ -17,10 +21,27 @@ internal class IncomingMailHandler : IMessageStore
         _mediator = mediator;
     }
     
-    public Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer,
+    public async Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer,
         CancellationToken cancellationToken)
     {
-        //throw new NotImplementedException();
-        return Task.FromResult(SmtpResponse.Ok);
+        if(!context.Properties.TryGetValue(Constants.InternalMailBoxKey, out MailBox? mailBox))
+            return SmtpResponse.AuthenticationFailed;
+        
+        if(mailBox is null)
+            return SmtpResponse.AuthenticationFailed;
+
+        
+        var message = await buffer.TryToMimeMessageAsync(cancellationToken);
+        if(message is null)
+            return SmtpResponse.SyntaxError;
+        
+        var messageId = message.MessageId;
+        Log.Debug($"Handling incoming message ({messageId}) from {transaction.From.AsAddress()}");
+
+        Log.Trace($"Subject={message.Subject}");
+        Log.Trace($"Body={message.TextBody}");
+        
+        
+        return SmtpResponse.Ok;
     }
 }
