@@ -2,6 +2,7 @@
 using MediatR;
 using NLog;
 using SmtpForwarder.Application;
+using SmtpForwarder.Application.Enums;
 using SmtpForwarder.Application.Events.MessageEvents;
 using SmtpForwarder.Domain;
 using SmtpForwarder.SmtpReceiverServer.Extensions;
@@ -41,7 +42,7 @@ internal class IncomingMailHandler : IMessageStore
         Log.Trace($"Subject={message.Subject}");
         Log.Trace($"Body={message.TextBody}");
 
-        var response = await _mediator.Send(new IncomingMessageRequest(message), cancellationToken);
+        var response = await _mediator.Send(new IncomingMessageRequest(mailBox, message), cancellationToken);
 
         return response switch
         {
