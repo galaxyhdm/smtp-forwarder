@@ -19,6 +19,7 @@ public static class ServiceInjector
     public static IServiceCollection AddAuthorizationHandlers(this IServiceCollection services) {
         services.AddSingleton<IPasswordHasher, Argon2Hasher>();
         services.AddSingleton<IIncomingMessageService, IncomingMessageService>();
+        services.AddSingleton<IForwardingService, ForwardingService>();
         //services.AddSingleton<IAuthTokenGenerator, AuthTokenGenerator>();
         return services;
     }

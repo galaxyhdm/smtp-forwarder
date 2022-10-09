@@ -4,6 +4,7 @@ using NLog;
 using SmtpForwarder.Application.Enums;
 using SmtpForwarder.Application.Interfaces.Repositories;
 using SmtpForwarder.Application.Interfaces.Services;
+using SmtpForwarder.Application.Jobs;
 using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Services;
@@ -19,14 +20,16 @@ internal class IncomingMessageService : IIncomingMessageService
 
     private readonly IMailBoxRepository _mailBoxRepository;
     private readonly IForwardingAddressRepository _forwardingAddressRepository;
+    private readonly IForwardingService _forwardingService;
     private readonly IMediator _mediator;
 
     public IncomingMessageService(IMailBoxRepository mailBoxRepository,
-        IForwardingAddressRepository forwardingAddressRepository, IMediator mediator)
+        IForwardingAddressRepository forwardingAddressRepository, IMediator mediator, IForwardingService forwardingService)
     {
         _mailBoxRepository = mailBoxRepository;
         _forwardingAddressRepository = forwardingAddressRepository;
         _mediator = mediator;
+        _forwardingService = forwardingService;
     }
 
     public async Task<IncomingMessageResponse> HandleIncomingMessage(MailBox mailBox, MimeMessage message,
@@ -40,7 +43,7 @@ internal class IncomingMessageService : IIncomingMessageService
             return IncomingMessageResponse.NoValidRecipientsGiven;
         }
 
-        
+        _forwardingService.EnqueueForwardingRequest(new ForwardingRequest(message, recipients));
         
         return IncomingMessageResponse.Ok;
     }
