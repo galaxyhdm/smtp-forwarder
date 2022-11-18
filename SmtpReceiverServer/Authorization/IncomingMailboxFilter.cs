@@ -13,6 +13,9 @@ internal class IncomingMailboxFilter : IMailboxFilter
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
+    //todo get from env
+    private static string InternalDomainPart = "test.lab";
+    
     private readonly IMediator _mediator;
 
     public IncomingMailboxFilter(IMediator mediator)
@@ -33,7 +36,7 @@ internal class IncomingMailboxFilter : IMailboxFilter
             return Task.FromResult(MailboxFilterResult.NoPermanently);
 
         if (mailBox.LocalAddressPart.Equals(from.User, StringComparison.OrdinalIgnoreCase)
-            && from.Host.Equals("test.lab"))
+            && from.Host.Equals(InternalDomainPart))
             return Task.FromResult(MailboxFilterResult.Yes);
 
         Log.Debug(

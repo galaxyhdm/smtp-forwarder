@@ -26,12 +26,15 @@ internal class IncomingMailHandler : IMessageStore
     public async Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer,
         CancellationToken cancellationToken)
     {
+        if(!context.Authentication.IsAuthenticated)
+            return SmtpResponse.AuthenticationRequired;
+        
         if(!context.Properties.TryGetValue(Constants.InternalMailBoxKey, out MailBox? mailBox))
             return SmtpResponse.AuthenticationFailed;
         
         if(mailBox is null)
             return SmtpResponse.AuthenticationFailed;
-
+        
         var message = await buffer.TryToMimeMessageAsync(cancellationToken);
         if(message is null)
             return SmtpResponse.SyntaxError;
@@ -39,8 +42,8 @@ internal class IncomingMailHandler : IMessageStore
         var messageId = message.MessageId;
         Log.Debug($"Handling incoming message ({messageId}) from {transaction.From.AsAddress()}");
 
-        Log.Trace($"Subject={message.Subject}");
-        Log.Trace($"Body={message.TextBody}");
+        //Log.Trace($"Subject={message.Subject}");
+        //Log.Trace($"Body={message.TextBody}");
 
         var response = await _mediator.Send(new IncomingMessageRequest(mailBox, message), cancellationToken);
 
