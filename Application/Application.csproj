@@ -21,8 +21,4 @@
       <PackageReference Include="Polly" Version="7.2.3" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Events\ForwardingAddressEvents" />
-    </ItemGroup>
-
 </Project>

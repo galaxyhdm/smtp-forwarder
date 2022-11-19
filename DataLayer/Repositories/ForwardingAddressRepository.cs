@@ -8,7 +8,8 @@ namespace SmtpForwarder.DataLayer.Repositories;
 internal sealed class ForwardingAddressRepository : RootRepositoryBase<ForwardingAddress>, IForwardingAddressRepository
 {
 
-    public ForwardingAddressRepository(AppDbContext context, ILogger<ForwardingAddressRepository> logger) : base(context)
+    public ForwardingAddressRepository(AppDbContext context, ILogger<ForwardingAddressRepository> logger) :
+        base(context)
     {
         Entities = context.Set<ForwardingAddress>()
             .Include(f => f.Owner)
@@ -20,5 +21,14 @@ internal sealed class ForwardingAddressRepository : RootRepositoryBase<Forwardin
         BeforeSave += (_, args) => logger.LogDebug("Saving forwarding_address {} - {}",
             args.Entity.Id,
             args.Entity.LocalAddressPart);
+    }
+
+
+    public async Task<IEnumerable<ForwardingAddress>> GetByLocalParts(List<string> localParts, bool onlyEnabled = true)
+    {
+        return await Entities
+            .Where(address => address.DeleteTimeUtc == null || address.DeleteTimeUtc < DateTime.UtcNow)
+            .Where(address => !onlyEnabled || address.Enabled)
+            .Where(address => localParts.Contains(address.LocalAddressPart)).ToListAsync();
     }
 }

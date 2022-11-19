@@ -2,6 +2,7 @@
 using MimeKit;
 using NLog;
 using SmtpForwarder.Application.Enums;
+using SmtpForwarder.Application.Events.MessageEvents;
 using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Jobs;
@@ -28,11 +29,17 @@ public class ForwardingRequest
     public async Task Run()
     {
         Log.Trace("Running forwarding request: {}", RequestId);
-        var internalAddresses = _recipients.TryGetValue(MailAddressType.Internal, out var internalAddressesTemp)
-            ? internalAddressesTemp
-            : new List<MailboxAddress>();
+        var internalAddresses = GetAddresses(MailAddressType.Internal);
+        var externalAddresses = GetAddresses(MailAddressType.ForwardExternal);
 
-        
+        await _mediator.Send(new InternalForwardingRequest(_mailBox, _message, internalAddresses));
+    }
+
+    private List<MailboxAddress> GetAddresses(MailAddressType addressType)
+    {
+        return _recipients.TryGetValue(addressType, out var addressesTemp)
+            ? addressesTemp
+            : new List<MailboxAddress>();
     }
 
     internal void SetMediator(IMediator mediator) =>

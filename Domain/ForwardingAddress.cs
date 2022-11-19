@@ -41,4 +41,7 @@ public class ForwardingAddress : EntityBase
 
     public void LinkWithTarget(ForwardTarget? forwardTarget) =>
         ForwardTarget = forwardTarget;
+
+    public bool IsDeleted() =>
+        DeleteTimeUtc is not null && DeleteTimeUtc < DateTime.UtcNow;
 }
