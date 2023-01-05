@@ -3,6 +3,7 @@ using MimeKit;
 using NLog;
 using SmtpForwarder.Application.Enums;
 using SmtpForwarder.Application.Events.MessageEvents;
+using SmtpForwarder.Application.Extensions;
 using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Jobs;
@@ -29,10 +30,16 @@ public class ForwardingRequest
     public async Task Run()
     {
         Log.Trace("Running forwarding request: {}", RequestId);
+        
+        Log.Debug("Extracting attachments");
+        await ExtractAttachments();
+        
         var internalAddresses = GetAddresses(MailAddressType.Internal);
         var externalAddresses = GetAddresses(MailAddressType.ForwardExternal);
 
-        await _mediator.Send(new InternalForwardingRequest(_mailBox, _message, internalAddresses));
+        await _mediator.Send(new InternalForwardingRequest(_mailBox, _message, internalAddresses, RequestId));
+        
+        DisposeMimeMessage(message: _message);
     }
 
     private List<MailboxAddress> GetAddresses(MailAddressType addressType)
@@ -44,4 +51,47 @@ public class ForwardingRequest
 
     internal void SetMediator(IMediator mediator) =>
         _mediator = mediator;
+
+    private async Task ExtractAttachments()
+    {
+        //Todo: Make env:
+        const string mainFolder = "files";
+        var folder = Path.Combine(mainFolder, RequestId.ToString());
+
+        if (!Directory.Exists(folder))
+            Directory.CreateDirectory(folder);
+        
+        foreach (var part in _message.Attachments.OfType<MimePart>())
+        {
+            if(!part.IsAttachment) continue;
+            var id = part.ContentId.EscapePath();
+            var filePath = Path.Combine(folder, $"{id}.temp");
+
+            // Write raw MimePart data
+            await part.WriteToAsync(filePath, false);
+            
+            // Write real file
+            await using var downloadFile = File.Create(Path.Combine(folder, $"{id}"));
+            await part.Content.DecodeToAsync(downloadFile);
+        }
+    }
+    
+    static void DisposeMimeMessage(MimeMessage message)
+    {
+        foreach (var bodyPart in message.BodyParts)
+        {
+            if (bodyPart is MessagePart rfc822)
+            {
+                DisposeMimeMessage(rfc822.Message);
+            }
+            else
+            {
+                var part = (MimePart) bodyPart;
+                part.Content.Stream.Dispose();
+            }
+        }
+
+        message.Dispose();
+        GC.Collect();
+    }
 }

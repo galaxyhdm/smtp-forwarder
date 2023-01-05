@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Net;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using SmtpForwarder.Application.Interfaces.Security;
 using SmtpForwarder.SmtpReceiverServer.Authorization;

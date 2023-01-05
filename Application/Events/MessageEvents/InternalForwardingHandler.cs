@@ -4,12 +4,13 @@ using MimeKit;
 using NLog;
 using SmtpForwarder.Application.Events.ForwardingAddressEvents;
 using SmtpForwarder.Application.Events.PermissionEvents;
+using SmtpForwarder.Application.Extensions;
 using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Events.MessageEvents;
 
 public record InternalForwardingRequest
-    (MailBox MailBox, MimeMessage Message, List<MailboxAddress> Addresses) : IRequest<bool>;
+    (MailBox MailBox, MimeMessage Message, List<MailboxAddress> Addresses, Guid RequestId) : IRequest<bool>;
 
 [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 public class InternalForwardingHandler : IRequestHandler<InternalForwardingRequest, bool>
@@ -26,7 +27,7 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
 
     public async Task<bool> Handle(InternalForwardingRequest request, CancellationToken cancellationToken)
     {
-        request.Deconstruct(out var mailBox, out var message, out var addresses);
+        request.Deconstruct(out var mailBox, out var message, out var addresses, out var requestId);
 
         if (addresses.Count == 0) return false;
 
@@ -41,8 +42,18 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
         var allowedAddresses = await CheckPermission(cancellationToken, forwardingAddresses, mailBox);
         PrintMissingPermission(forwardingAddresses, allowedAddresses);
 
-        //todo: handle forward
+        //Todo: Make env:
+        const string mainFolder = "files";
+        var folder = Path.Combine(mainFolder, requestId.ToString());
+
+        foreach (var messageAttachment in message.Attachments.OfType<MimePart>())
+        {
+            var id = messageAttachment.ContentId.EscapePath();
+            var filePath = Path.Combine(folder, $"{id}");
+            Log.Info(File.Exists(filePath));
+        }
         
+        //todo: handle forward
         return true;
     }
 
@@ -64,7 +75,7 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
 
     private void PrintNotInDatabase(IEnumerable<string> all, IEnumerable<ForwardingAddress> found)
     {
-        foreach (var address in all.Except(found.Select(address => address.LocalAddressPart))) 
+        foreach (var address in all.Except(found.Select(address => address.LocalAddressPart)))
             Log.Trace("Ignoring internal mail address {}, db-entry not found!",
                 address);
     }
