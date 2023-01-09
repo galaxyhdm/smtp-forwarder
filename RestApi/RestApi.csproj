@@ -22,4 +22,24 @@
       <ProjectReference Include="..\SmtpReceiverServer\SmtpReceiverServer.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="forwarder\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="forwarder\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="forwarder\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Remove="forwarder\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="forwarder\telegram_forwarder\TelegramForwarder.deps.json" />
+    </ItemGroup>
+
 </Project>

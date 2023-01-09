@@ -5,6 +5,7 @@ using NLog;
 using SmtpForwarder.Application.Events.ForwardingAddressEvents;
 using SmtpForwarder.Application.Events.PermissionEvents;
 using SmtpForwarder.Application.Extensions;
+using SmtpForwarder.Application.Interfaces.Services;
 using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Events.MessageEvents;
@@ -19,10 +20,12 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
     private static string InternalDomainPart = "test.lab";
 
     private readonly IMediator _mediator;
+    private readonly IForwardingController _forwardingController;
 
-    public InternalForwardingHandler(IMediator mediator)
+    public InternalForwardingHandler(IMediator mediator, IForwardingController forwardingController)
     {
         _mediator = mediator;
+        _forwardingController = forwardingController;
     }
 
     public async Task<bool> Handle(InternalForwardingRequest request, CancellationToken cancellationToken)

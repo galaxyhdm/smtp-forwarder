@@ -92,6 +92,6 @@ public class ForwardingRequest
         }
 
         message.Dispose();
-        GC.Collect();
+        //GC.Collect();
     }
 }

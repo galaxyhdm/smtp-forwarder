@@ -43,4 +43,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.Services.WarmUp();
 app.Run();

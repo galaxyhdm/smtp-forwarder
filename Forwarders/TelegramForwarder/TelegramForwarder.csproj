@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>SmtpForwarder.TelegramForwarder</RootNamespace>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<OutputType>Library</OutputType>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\ForwardingApi\ForwardingApi.csproj">
+		<Private>false</Private>
+	  </ProjectReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Flurl.Http" Version="3.2.4" />
+    </ItemGroup>
+
+</Project>

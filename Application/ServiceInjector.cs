@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SmtpForwarder.Application.Authorization;
+using SmtpForwarder.Application.Forwarders;
 using SmtpForwarder.Application.Interfaces.Authorization;
 using SmtpForwarder.Application.Interfaces.Services;
 using SmtpForwarder.Application.Services;
@@ -20,7 +21,14 @@ public static class ServiceInjector
         services.AddSingleton<IPasswordHasher, Argon2Hasher>();
         services.AddSingleton<IIncomingMessageService, IncomingMessageService>();
         services.AddSingleton<IForwardingService, ForwardingService>();
+        
+        services.AddSingleton<IForwardingController, ForwardingController>();
         //services.AddSingleton<IAuthTokenGenerator, AuthTokenGenerator>();
         return services;
     }
+    
+    public static void WarmUp(this IServiceProvider app)
+    {
+        app.GetRequiredService<IForwardingController>();
+    } 
 }
