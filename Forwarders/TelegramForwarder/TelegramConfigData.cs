@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace SmtpForwarder.ForwardingApi;
+namespace SmtpForwarder.TelegramForwarder;
 
 public class TelegramConfigData
 {
