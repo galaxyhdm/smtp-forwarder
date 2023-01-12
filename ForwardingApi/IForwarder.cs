@@ -1,10 +1,12 @@
-﻿namespace SmtpForwarder.ForwardingApi;
+﻿using MimeKit;
+
+namespace SmtpForwarder.ForwardingApi;
 
 public interface IForwarder
 {
-    Task InitializeAsync(dynamic forwarderConfig);
+    Task InitializeAsync(string forwarderConfig);
 
-    Task ForwardMessage();
+    Task ForwardMessage(MimeMessage message, List<string> attachmentIds, Guid requestId);
     
     string Name { get; }
 }

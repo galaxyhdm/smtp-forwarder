@@ -49,13 +49,33 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
         const string mainFolder = "files";
         var folder = Path.Combine(mainFolder, requestId.ToString());
 
+        var attachmentIds = new List<string>();
         foreach (var messageAttachment in message.Attachments.OfType<MimePart>())
         {
             var id = messageAttachment.ContentId.EscapePath();
             var filePath = Path.Combine(folder, $"{id}");
-            Log.Info(File.Exists(filePath));
+            if (File.Exists(filePath))
+                attachmentIds.Add(id);
         }
-        
+
+        foreach (var forwardingAddress in allowedAddresses)
+        {
+            if (!forwardingAddress.ForwardTargetId.HasValue)
+            {
+                Log.Warn(
+                    "Could not forward message ({} | {}) with forwarding address ({} | {}), because no forwarding-target is assigned!",
+                    requestId, message.MessageId, forwardingAddress.LocalAddressPart, forwardingAddress.Id);
+                continue;
+            }
+
+            Log.Debug("Forwarding message ({}) with forwarding address ({} | {}) to target: {}", requestId,
+                forwardingAddress.LocalAddressPart, forwardingAddress.Id,
+                forwardingAddress.ForwardTargetId.Value);
+
+            await _forwardingController.GetForwarder(forwardingAddress.ForwardTargetId.Value)
+                .ForwardMessage(message, attachmentIds, requestId);
+        }
+
         //todo: handle forward
         return true;
     }

@@ -29,16 +29,21 @@ public class ForwardingRequest
 
     public async Task Run()
     {
-        Log.Trace("Running forwarding request: {}", RequestId);
+        Log.Info("Starting email forwarding for mail: {} ({})", _message.MessageId, RequestId);
+        var startTime = DateTime.UtcNow;
         
-        Log.Debug("Extracting attachments");
+        Log.Trace("Extracting attachments");
         await ExtractAttachments();
         
         var internalAddresses = GetAddresses(MailAddressType.Internal);
         var externalAddresses = GetAddresses(MailAddressType.ForwardExternal);
 
         await _mediator.Send(new InternalForwardingRequest(_mailBox, _message, internalAddresses, RequestId));
-        
+
+        var stopTime = DateTime.UtcNow;
+        Log.Info("Finished email forwarding for mail: {} ({}) in {}ms", _message.MessageId, RequestId, (stopTime-startTime).TotalMilliseconds);
+
+        await CleanUp();
         DisposeMimeMessage(message: _message);
     }
 
@@ -74,6 +79,16 @@ public class ForwardingRequest
             await using var downloadFile = File.Create(Path.Combine(folder, $"{id}"));
             await part.Content.DecodeToAsync(downloadFile);
         }
+    }
+
+    private async Task CleanUp()
+    {
+        //Todo: Make env:
+        const string mainFolder = "files";
+        var folder = Path.Combine(mainFolder, RequestId.ToString());
+     
+        if(!Directory.Exists(folder)) return;
+        Directory.Delete(folder, true);
     }
     
     static void DisposeMimeMessage(MimeMessage message)

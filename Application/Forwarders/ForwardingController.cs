@@ -32,6 +32,11 @@ internal class ForwardingController : IForwardingController
         Task.Run(InitializeForwardTargets);
     }
 
+    public IForwarder GetForwarder(Guid id)
+    {
+        return _forwarders[id];
+    }
+    
     private async Task InitializeForwardTargetAsync(ForwardTarget target)
     {
         if (!_forwarderTypes.TryGetValue(target.ForwarderName, out var classType))
@@ -49,11 +54,9 @@ internal class ForwardingController : IForwardingController
         }
 
         if (Activator.CreateInstance(classType) is not IForwarder forwarder) return;
-        dynamic settings = JsonConvert.DeserializeObject(target.ForwarderSettings) ??
-                           throw new InvalidOperationException();
 
         _forwarders.Add(target.Id, forwarder);
-        await forwarder.InitializeAsync(settings);
+        await forwarder.InitializeAsync(target.ForwarderSettings);
         Log.Debug("Forward-Target ({}) loaded with forwarder: {}", target.Id, forwarder.Name);
     }
 
