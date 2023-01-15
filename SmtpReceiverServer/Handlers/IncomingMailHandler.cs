@@ -38,8 +38,18 @@ internal class IncomingMailHandler : IMessageStore
         var message = await buffer.TryToMimeMessageAsync(cancellationToken);
         if(message is null)
             return SmtpResponse.SyntaxError;
-        
+
         var messageId = message.MessageId;
+
+        if (context.Properties.TryGetValue(Constants.SessionStartKey, out DateTime? startTime) && startTime.HasValue)
+        {
+            var handlingTime = (DateTime.UtcNow - startTime.Value).TotalMilliseconds;
+            Log.Info("Finished smtp request from {} with message {} in {}ms", 
+                context.GetIpString(), 
+                messageId,
+                handlingTime);
+        }
+
         Log.Debug($"Handling incoming message ({messageId}) from {transaction.From.AsAddress()}");
 
         //Log.Trace($"Subject={message.Subject}");

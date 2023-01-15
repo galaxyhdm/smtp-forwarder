@@ -68,7 +68,8 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
                 continue;
             }
 
-            Log.Debug("Forwarding message ({}) with forwarding address ({} | {}) to target: {}", requestId,
+            Log.Debug("Forwarding message ({}) with forwarding address ({} | {}) to target: {}", 
+                message.MessageId,
                 forwardingAddress.LocalAddressPart, forwardingAddress.Id,
                 forwardingAddress.ForwardTargetId.Value);
 

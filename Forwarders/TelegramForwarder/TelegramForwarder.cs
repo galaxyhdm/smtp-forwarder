@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using ByteSizeLib;
-using Flurl;
 using Flurl.Http;
-using Flurl.Http.Content;
 using MimeKit;
+using MimeKit.Text;
 using Newtonsoft.Json;
 using SmtpForwarder.ForwardingApi;
 
@@ -13,13 +13,23 @@ namespace SmtpForwarder.TelegramForwarder;
 [Forwarding("telegram_forwarder")]
 public class TelegramForwarder : IForwarder
 {
-    public string Name => (GetType().GetCustomAttribute(typeof(ForwardingAttribute)) as ForwardingAttribute)!.Name;
+    public string Name
+    {
+        get
+        {
+            if(string.IsNullOrWhiteSpace(_name))
+                _name = (GetType().GetCustomAttribute(typeof(ForwardingAttribute)) as ForwardingAttribute)!.Name;
+            return _name;
+        }
+    }
 
     private TelegramConfig _telegramConfig;
 
     private const string BodyTruncated = "\n\n[...]";
     private const string MainFolder = "files";
 
+    private string? _name;
+    
     public Task InitializeAsync(string forwarderConfig)
     {
         var telegramConfigData = JsonConvert.DeserializeObject<TelegramConfigData>(forwarderConfig);
@@ -54,8 +64,9 @@ public class TelegramForwarder : IForwarder
     {
         var response =
             await
-                $"{_telegramConfig.TelegramApiPrefix}bot{_telegramConfig.TelegramBotToken}/sendMessage?disable_web_page_preview=true"
+                $"{_telegramConfig.TelegramApiPrefix}bot{_telegramConfig.TelegramBotToken}/sendMessage"
                     .WithTimeout(_telegramConfig.TelegramApiTimeoutSeconds)
+                    .SetQueryParam("disable_web_page_preview", true)
                     .PostMultipartAsync(content => content
                         .AddString("chat_id", chatId)
                         .AddString("text", message.Text));
@@ -131,10 +142,44 @@ public class TelegramForwarder : IForwarder
         attachment.FileId = fileId;
         return true;
     }
+    
+    private static string HtmlToPlainText(string html)
+    {
+        const string tagWhiteSpace = @"(>|$)(\W|\n|\r)+<";//matches one or more (white space or line breaks) between '>' and '<'
+        const string stripFormatting = @"<[^>]*(>|$)";//match any character between '<' and '>', even when end tag is missing
+        const string lineBreak = @"<(br|BR)\s{0,1}\/{0,1}>";//matches: <br>,<br/>,<br />,<BR>,<BR/>,<BR />
+        var lineBreakRegex = new Regex(lineBreak, RegexOptions.Multiline);
+        var stripFormattingRegex = new Regex(stripFormatting, RegexOptions.Multiline);
+        var tagWhiteSpaceRegex = new Regex(tagWhiteSpace, RegexOptions.Multiline);
 
+        var text = html;
+        //Decode html specific characters
+        text = System.Net.WebUtility.HtmlDecode(text); 
+        //Remove tag whitespace/line breaks
+        text = tagWhiteSpaceRegex.Replace(text, "><");
+        //Replace <br /> with line breaks
+        text = lineBreakRegex.Replace(text, Environment.NewLine);
+        //Strip formatting
+        text = stripFormattingRegex.Replace(text, string.Empty);
+
+        return text;
+    }
+    
+    
     private FormattedEmail FormatEmail(MimeMessage message, List<string> attachmentIds, Guid requestId)
     {
+
         var text = message.TextBody;
+        
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            var html = message.GetTextBody(TextFormat.Html);
+            text = HtmlToPlainText(html);
+            //text = new HtmlToText().Convert(html);
+        }
+
+        if (string.IsNullOrWhiteSpace(text))
+            text = message.GetTextBody(TextFormat.Plain);
 
         var attachmentDetails = new List<string>();
         var attachments = new List<FormattedAttachment>();
@@ -195,7 +240,7 @@ public class TelegramForwarder : IForwarder
             }
         };
 
-        //doParts("🔗", _message.BodyParts);
+        doParts("🔗", message.BodyParts);
         doParts("📎", message.Attachments);
 
         var formattedAttachmentsDetails = attachmentDetails.Count > 0

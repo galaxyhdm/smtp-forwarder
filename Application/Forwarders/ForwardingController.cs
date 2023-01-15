@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Reflection;
+using Newtonsoft.Json;
 using NLog;
 using SmtpForwarder.Application.Interfaces.Repositories;
 using SmtpForwarder.Application.Interfaces.Services;
@@ -28,6 +29,7 @@ internal class ForwardingController : IForwardingController
         if (!Directory.Exists(ForwarderPath))
             Directory.CreateDirectory(ForwarderPath);
 
+        LoadInternalForwarder(typeof(TelegramForwarder.TelegramForwarder));
         LoadAllForwarderTypes();
         Task.Run(InitializeForwardTargets);
     }
@@ -95,7 +97,7 @@ internal class ForwardingController : IForwardingController
                 keyValuePair.Value.FullName,
                 keyValuePair.Key);
         }
-
+        
         return true;
     }
 
@@ -115,6 +117,30 @@ internal class ForwardingController : IForwardingController
 
         foreach (var (key, value) in _forwarderTypes)
             Log.Debug("Forwarder-Type ({}), loaded with name: {}", value.FullName, key);
+    }
+
+    private void LoadInternalForwarder(Type classType)
+    {
+        var iForwarder = typeof(IForwarder);
+        var isForwarder = classType.GetInterfaces().Any(type => type == iForwarder);
+        if (!isForwarder) throw new TypeLoadException($"{nameof(classType)} has no {nameof(IForwarder)} interface");
+        var customAttribute = classType.GetCustomAttribute(typeof(ForwardingAttribute));
+        if (customAttribute is null)
+        {
+            Log.Warn("Could not load forwarder ({}), because no forwarding-attribute found!",
+                classType.FullName);
+            return;
+        }
+
+        if (customAttribute is not ForwardingAttribute forwardingAttribute) return;
+        if (!_forwarderTypes.TryAdd(forwardingAttribute.Name, classType))
+        {
+            Log.Warn("Forwarder-Type ({}), not added, because name '{}' already exists!",
+                classType.FullName,
+                forwardingAttribute.Name);
+            return;
+        }
+        //Log.Debug("Forwarder-Type ({}), loaded with name: {}", classType.FullName, forwardingAttribute.Name);
     }
 
 }
