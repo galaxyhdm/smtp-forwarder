@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using MimeKit;
+using MimeKit.Utils;
 using NLog;
 using SmtpForwarder.Application.Enums;
 using SmtpForwarder.Application.Events.MessageEvents;
@@ -13,7 +14,8 @@ public class ForwardingRequest
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
     public readonly Guid RequestId = Guid.NewGuid();
-
+    public MimeMessage Message => _message;
+    
     private IMediator _mediator;
     private readonly MailBox _mailBox;
     private readonly MimeMessage _message;
@@ -69,6 +71,8 @@ public class ForwardingRequest
         foreach (var part in _message.Attachments.OfType<MimePart>())
         {
             if(!part.IsAttachment) continue;
+            if (string.IsNullOrWhiteSpace(part.ContentId))
+                part.ContentId = MimeUtils.GenerateMessageId();
             var id = part.ContentId.EscapePath();
             var filePath = Path.Combine(folder, $"{id}.temp");
 
@@ -103,6 +107,7 @@ public class ForwardingRequest
             {
                 var part = (MimePart) bodyPart;
                 part.Content.Stream.Dispose();
+                part.Content.Dispose();
             }
         }
 

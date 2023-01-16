@@ -240,7 +240,7 @@ public class TelegramForwarder : IForwarder
             }
         };
 
-        doParts("🔗", message.BodyParts);
+        //doParts("🔗", message.BodyParts);
         doParts("📎", message.Attachments);
 
         var formattedAttachmentsDetails = attachmentDetails.Count > 0

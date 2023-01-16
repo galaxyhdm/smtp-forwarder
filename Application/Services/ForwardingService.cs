@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks.Dataflow;
 using MediatR;
+using MimeKit;
 using NLog;
 using Polly;
 using SmtpForwarder.Application.Interfaces.Services;
@@ -36,10 +37,23 @@ public class ForwardingService : IForwardingService
             catch (Exception e)
             {
                 Log.Error(e, "Error while processing request ({})", job.RequestId);
+                SaveFailedMessage(job);
             }
         }, blockOptions);
     }
 
+    private async void SaveFailedMessage(ForwardingRequest job)
+    {
+        const string errorDir = "error_messages";
+        
+        if (!Directory.Exists(errorDir))
+            Directory.CreateDirectory(errorDir);
+        
+        var filePath = Path.Combine(errorDir, $"{job.RequestId}");
+        await job.Message.WriteToAsync(FormatOptions.Default, filePath);
+        Log.Debug("Failed message saved as: {}", filePath);
+    }
+    
     public void EnqueueForwardingRequest(ForwardingRequest request)
     {
         _actionBlock.Post(request);
