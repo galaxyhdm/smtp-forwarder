@@ -6,6 +6,7 @@ using SmtpForwarder.Application.Events.ForwardingAddressEvents;
 using SmtpForwarder.Application.Events.PermissionEvents;
 using SmtpForwarder.Application.Extensions;
 using SmtpForwarder.Application.Interfaces.Services;
+using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Events.MessageEvents;
@@ -40,10 +41,10 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
 
         // Get corresponding database entries 
         var forwardingAddresses = await _mediator.Send(new GetForwardingAddressByList(localParts), cancellationToken);
-        PrintNotInDatabase(localParts, forwardingAddresses);
+        PrintNotInDatabase(localParts, forwardingAddresses, message.MessageId);
 
         var allowedAddresses = await CheckPermission(cancellationToken, forwardingAddresses, mailBox);
-        PrintMissingPermission(forwardingAddresses, allowedAddresses);
+        PrintMissingPermission(forwardingAddresses, allowedAddresses, message.MessageId);
 
         //Todo: Make env:
         const string mainFolder = "files";
@@ -65,13 +66,19 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
                 Log.Warn(
                     "Could not forward message ({} | {}) with forwarding address ({} | {}), because no forwarding-target is assigned!",
                     requestId, message.MessageId, forwardingAddress.LocalAddressPart, forwardingAddress.Id);
+
+                ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Warn, "forwarding", "try-forward-1",
+                    $"Could not forward message with forwarding address ({forwardingAddress.LocalAddressPart}), because no forwarding-target is assigned!");
                 continue;
             }
 
-            Log.Debug("Forwarding message ({}) with forwarding address ({} | {}) to target: {}", 
+            Log.Debug("Forwarding message ({}) with forwarding address ({} | {}) to target: {}",
                 message.MessageId,
                 forwardingAddress.LocalAddressPart, forwardingAddress.Id,
                 forwardingAddress.ForwardTargetId.Value);
+
+            ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Info, "forwarding", "try-forward-2",
+                $"Forwarding message with forwarding address ({forwardingAddress.LocalAddressPart})");
 
             await _forwardingController.GetForwarder(forwardingAddress.ForwardTargetId.Value)
                 .ForwardMessage(message, attachmentIds, requestId);
@@ -97,17 +104,29 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
         return allowedAddresses;
     }
 
-    private void PrintNotInDatabase(IEnumerable<string> all, IEnumerable<ForwardingAddress> found)
+    private void PrintNotInDatabase(IEnumerable<string> all, IEnumerable<ForwardingAddress> found,
+        string messageMessageId)
     {
         foreach (var address in all.Except(found.Select(address => address.LocalAddressPart)))
+        {
             Log.Trace("Ignoring internal mail address {}, db-entry not found!",
                 address);
+
+            ProcessTraceBucket.Get.LogTrace(messageMessageId, TraceLevel.Warn, "forwarding", "not-found-1",
+                $"Could not found internal mail address: {address}");
+        }
     }
 
-    private void PrintMissingPermission(IEnumerable<ForwardingAddress> all, IEnumerable<ForwardingAddress> allowed)
+    private void PrintMissingPermission(IEnumerable<ForwardingAddress> all, IEnumerable<ForwardingAddress> allowed,
+        string messageMessageId)
     {
         foreach (var address in all.Except(allowed))
+        {
             Log.Trace("Ignoring internal mail address {} ({}), because of missing permissions!",
                 address.LocalAddressPart, address.Id);
+
+            ProcessTraceBucket.Get.LogTrace(messageMessageId, TraceLevel.Warn, "forwarding", "not-found-2",
+                $"Could not found internal mail address: {address.LocalAddressPart}");
+        }
     }
 }

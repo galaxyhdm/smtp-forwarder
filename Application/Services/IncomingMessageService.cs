@@ -6,6 +6,7 @@ using SmtpForwarder.Application.Extensions;
 using SmtpForwarder.Application.Interfaces.Repositories;
 using SmtpForwarder.Application.Interfaces.Services;
 using SmtpForwarder.Application.Jobs;
+using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Services;
@@ -42,21 +43,25 @@ internal class IncomingMessageService : IIncomingMessageService
         if (recipients.Count == 0)
         {
             Log.Debug("No recipients found!");
+            ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Warn, "handling", "no-valid-1",
+                "No recipients found", end: true);
             return IncomingMessageResponse.NoValidRecipientsGiven;
         }
-        
+
         var countAccepted = recipients.ExceptBy(new[] {MailAddressType.Blocked}, pair => pair.Key).Count();
-        
-        PrintBlocked(recipients);
-        
+
+        PrintBlocked(recipients, message.MessageId);
+
         if (countAccepted == 0)
         {
             Log.Debug("No recipients found!");
+            ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Warn, "handling", "no-valid-2",
+                "No recipients found", end: true);
             return IncomingMessageResponse.NoValidRecipientsGiven;
         }
 
         _forwardingService.EnqueueForwardingRequest(new ForwardingRequest(mailBox, message, recipients));
-        
+
         return IncomingMessageResponse.Ok;
     }
 
@@ -81,21 +86,24 @@ internal class IncomingMessageService : IIncomingMessageService
                 dictionary.AddToDictionary(MailAddressType.ForwardExternal, address);
                 continue;
             }
-            
+
             dictionary.AddToDictionary(MailAddressType.Blocked, address);
         }
 
         return dictionary;
     }
 
-    private void PrintBlocked(Dictionary<MailAddressType, List<MailboxAddress>> dictionary)
+    private void PrintBlocked(Dictionary<MailAddressType, List<MailboxAddress>> dictionary, string messageId)
     {
-        if(!dictionary.TryGetValue(MailAddressType.Blocked, out var blockedAddresses)) return;
+        if (!dictionary.TryGetValue(MailAddressType.Blocked, out var blockedAddresses)) return;
         foreach (var address in blockedAddresses)
         {
             Log.Warn("Ignoring mail address ({}), because smtp-forward is not allowed for domain: {}",
                 address.Address,
                 address.Domain);
+
+            ProcessTraceBucket.Get.LogTrace(messageId, TraceLevel.Warn, "handling", "block-address",
+                $"Ignoring mail address ({address.Address}), because smtp-forward is not allowed for domain: {address.Domain}");
         }
     }
 

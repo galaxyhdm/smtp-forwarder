@@ -5,6 +5,7 @@ using NLog;
 using SmtpForwarder.Application.Enums;
 using SmtpForwarder.Application.Events.MessageEvents;
 using SmtpForwarder.Application.Extensions;
+using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Jobs;
@@ -15,7 +16,7 @@ public class ForwardingRequest
 
     public readonly Guid RequestId = Guid.NewGuid();
     public MimeMessage Message => _message;
-    
+
     private IMediator _mediator;
     private readonly MailBox _mailBox;
     private readonly MimeMessage _message;
@@ -32,18 +33,28 @@ public class ForwardingRequest
     public async Task Run()
     {
         Log.Info("Starting email forwarding for mail: {} ({})", _message.MessageId, RequestId);
+        ProcessTraceBucket.Get.LogTrace(_message.MessageId, TraceLevel.Info, "forwarding", "start-forwarding",
+            "Starting email forwarding");
+
         var startTime = DateTime.UtcNow;
-        
+
         Log.Trace("Extracting attachments");
         await ExtractAttachments();
-        
+
         var internalAddresses = GetAddresses(MailAddressType.Internal);
         var externalAddresses = GetAddresses(MailAddressType.ForwardExternal);
 
-        await _mediator.Send(new InternalForwardingRequest(_mailBox, _message, internalAddresses, RequestId));
+        var internalTask =
+            _mediator.Send(new InternalForwardingRequest(_mailBox, _message, internalAddresses, RequestId));
+
+        await Task.WhenAll(internalTask);
 
         var stopTime = DateTime.UtcNow;
-        Log.Info("Finished email forwarding for mail: {} ({}) in {}ms", _message.MessageId, RequestId, (stopTime-startTime).TotalMilliseconds);
+        var forwardingTime = (stopTime - startTime).TotalMilliseconds;
+        Log.Info("Finished email forwarding for mail: {} ({}) in {}ms", _message.MessageId, RequestId,
+            forwardingTime);
+        ProcessTraceBucket.Get.LogTrace(_message.MessageId, TraceLevel.Info, "forwarding", "end-forwarding",
+            $"Finished email forwarding in {forwardingTime}ms", end: true);
 
         await CleanUp();
         DisposeMimeMessage(message: _message);
@@ -67,18 +78,19 @@ public class ForwardingRequest
 
         if (!Directory.Exists(folder))
             Directory.CreateDirectory(folder);
-        
+
         foreach (var part in _message.Attachments.OfType<MimePart>())
         {
-            if(!part.IsAttachment) continue;
+            if (!part.IsAttachment) continue;
             if (string.IsNullOrWhiteSpace(part.ContentId))
+                // Generate a custom contentId every time, to prevent injections and bad chars
                 part.ContentId = MimeUtils.GenerateMessageId();
             var id = part.ContentId.EscapePath();
             var filePath = Path.Combine(folder, $"{id}.temp");
 
             // Write raw MimePart data
             await part.WriteToAsync(filePath, false);
-            
+
             // Write real file
             await using var downloadFile = File.Create(Path.Combine(folder, $"{id}"));
             await part.Content.DecodeToAsync(downloadFile);
@@ -90,11 +102,11 @@ public class ForwardingRequest
         //Todo: Make env:
         const string mainFolder = "files";
         var folder = Path.Combine(mainFolder, RequestId.ToString());
-     
-        if(!Directory.Exists(folder)) return;
+
+        if (!Directory.Exists(folder)) return;
         Directory.Delete(folder, true);
     }
-    
+
     static void DisposeMimeMessage(MimeMessage message)
     {
         foreach (var bodyPart in message.BodyParts)

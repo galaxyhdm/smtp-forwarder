@@ -4,6 +4,7 @@ using NLog;
 using SmtpForwarder.Application;
 using SmtpForwarder.Application.Enums;
 using SmtpForwarder.Application.Events.MessageEvents;
+using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
 using SmtpForwarder.SmtpReceiverServer.Extensions;
 using SmtpServer;
@@ -19,35 +20,40 @@ internal class IncomingMailHandler : IMessageStore
 
     private readonly IMediator _mediator;
 
-    public IncomingMailHandler(IMediator mediator) {
+    public IncomingMailHandler(IMediator mediator)
+    {
         _mediator = mediator;
     }
-    
-    public async Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction, ReadOnlySequence<byte> buffer,
+
+    public async Task<SmtpResponse> SaveAsync(ISessionContext context, IMessageTransaction transaction,
+        ReadOnlySequence<byte> buffer,
         CancellationToken cancellationToken)
     {
-        if(!context.Authentication.IsAuthenticated)
+        if (!context.Authentication.IsAuthenticated)
             return SmtpResponse.AuthenticationRequired;
-        
-        if(!context.Properties.TryGetValue(Constants.InternalMailBoxKey, out MailBox? mailBox))
+
+        if (!context.Properties.TryGetValue(Constants.InternalMailBoxKey, out MailBox? mailBox))
             return SmtpResponse.AuthenticationFailed;
-        
-        if(mailBox is null)
+
+        if (mailBox is null)
             return SmtpResponse.AuthenticationFailed;
-        
+
         var message = await buffer.TryToMimeMessageAsync(cancellationToken);
-        if(message is null)
+        if (message is null)
             return SmtpResponse.SyntaxError;
 
+        // Generate a custom messageId every timexc, to prevent injections and bad chars
         var messageId = message.MessageId;
 
         if (context.Properties.TryGetValue(Constants.SessionStartKey, out DateTime? startTime) && startTime.HasValue)
         {
             var handlingTime = (DateTime.UtcNow - startTime.Value).TotalMilliseconds;
-            Log.Info("Finished smtp request from {} with message {} in {}ms", 
-                context.GetIpString(), 
+            Log.Info("Finished smtp request from {} with message {} in {}ms",
+                context.GetIpString(),
                 messageId,
                 handlingTime);
+            ProcessTraceBucket.Get.LogTrace(messageId, TraceLevel.Info, "smtp", "finished-smtp",
+                $"Got smtp request in {handlingTime}ms");
         }
 
         Log.Debug($"Handling incoming message ({messageId}) from {transaction.From.AsAddress()}");
