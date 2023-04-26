@@ -7,7 +7,11 @@ namespace SmtpForwarder.DataLayer.Extensions;
 
 public static class AppContextService
 {
-    public static IServiceCollection AddAppContext(this IServiceCollection services, string connectionString) {
+    public static IServiceCollection AddAppContext(this IServiceCollection services, string? connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new ArgumentException("String could not be null or empty.", nameof(connectionString)); 
+        
         services.AddDbContext<AppDbContext>(
             options => {
                 options.UseNpgsql(connectionString)

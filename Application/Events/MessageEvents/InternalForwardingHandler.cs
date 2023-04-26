@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using MediatR;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using NLog;
 using SmtpForwarder.Application.Events.ForwardingAddressEvents;
@@ -8,6 +9,7 @@ using SmtpForwarder.Application.Extensions;
 using SmtpForwarder.Application.Interfaces.Services;
 using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
+using SmtpForwarder.Domain.Settings;
 
 namespace SmtpForwarder.Application.Events.MessageEvents;
 
@@ -18,15 +20,20 @@ public record InternalForwardingRequest
 public class InternalForwardingHandler : IRequestHandler<InternalForwardingRequest, bool>
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-    private static string InternalDomainPart = "test.lab";
+
+    private readonly string _internalDomainPart;
 
     private readonly IMediator _mediator;
     private readonly IForwardingController _forwardingController;
 
-    public InternalForwardingHandler(IMediator mediator, IForwardingController forwardingController)
+    public InternalForwardingHandler(IMediator mediator, IForwardingController forwardingController,
+        IOptions<Settings> settingOptions)
     {
         _mediator = mediator;
         _forwardingController = forwardingController;
+        _internalDomainPart = settingOptions.Value.InternalDomain;
+
+        Log.Info("Using {} as internal domain.", _internalDomainPart);
     }
 
     public async Task<bool> Handle(InternalForwardingRequest request, CancellationToken cancellationToken)
@@ -36,7 +43,7 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
         if (addresses.Count == 0) return false;
 
         var localParts = addresses
-            .Where(address => address.Domain.Equals(InternalDomainPart))
+            .Where(address => address.Domain.Equals(_internalDomainPart))
             .Select(address => address.LocalPart).ToList();
 
         // Get corresponding database entries 

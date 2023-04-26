@@ -13,7 +13,7 @@ public static class ServiceInjector
 {
     public static IServiceCollection AddEvents(this IServiceCollection serviceCollection, Assembly assembly)
     {
-        serviceCollection.AddMediatR(assembly);
+        serviceCollection.AddMediatR(configuration => configuration.RegisterServicesFromAssembly(assembly));
         return serviceCollection;
     }
     

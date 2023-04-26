@@ -18,7 +18,7 @@ internal class SmtpUserAuthenticator : IUserAuthenticator
     private readonly IMediator _mediator;
     
     private static readonly PartitionedRateLimiter<IPEndPoint> RateLimiter = PartitionedRateLimiter.Create<IPEndPoint, string>(ipEndPoint =>
-        RateLimitPartition.GetFixedWindowLimiter(ipEndPoint.Address.ToString(), _ => new()
+        RateLimitPartition.GetFixedWindowLimiter(ipEndPoint.Address.ToString(), _ => new FixedWindowRateLimiterOptions
         {
             AutoReplenishment = true,
             PermitLimit = 20,

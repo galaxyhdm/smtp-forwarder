@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using NLog;
 using SmtpForwarder.Application.Enums;
@@ -8,6 +9,7 @@ using SmtpForwarder.Application.Interfaces.Services;
 using SmtpForwarder.Application.Jobs;
 using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
+using SmtpForwarder.Domain.Settings;
 
 namespace SmtpForwarder.Application.Services;
 
@@ -15,11 +17,10 @@ internal class IncomingMessageService : IIncomingMessageService
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-    //todo get from env
-    private static string InternalDomainPart = "test.lab";
-    private static bool AllowSmtpForward = true;
-    private static List<string> AllowedForwardAddresses = new() {"hallo.lab"};
-
+    private readonly string _internalDomainPart;
+    private readonly bool _allowSmtpForward;
+    private readonly List<string> _allowedForwardAddresses;
+    
     private readonly IMailBoxRepository _mailBoxRepository;
     private readonly IForwardingAddressRepository _forwardingAddressRepository;
     private readonly IForwardingService _forwardingService;
@@ -27,12 +28,17 @@ internal class IncomingMessageService : IIncomingMessageService
 
     public IncomingMessageService(IMailBoxRepository mailBoxRepository,
         IForwardingAddressRepository forwardingAddressRepository, IMediator mediator,
-        IForwardingService forwardingService)
+        IForwardingService forwardingService,
+        IOptions<Settings> settingOptions)
     {
         _mailBoxRepository = mailBoxRepository;
         _forwardingAddressRepository = forwardingAddressRepository;
         _mediator = mediator;
         _forwardingService = forwardingService;
+        
+        _internalDomainPart = settingOptions.Value.InternalDomain;
+        _allowSmtpForward = settingOptions.Value.AllowSmtpForward;
+        _allowedForwardAddresses = settingOptions.Value.AllowedForwardDomains;
     }
 
     public async Task<IncomingMessageResponse> HandleIncomingMessage(MailBox mailBox, MimeMessage message,
@@ -74,14 +80,14 @@ internal class IncomingMessageService : IIncomingMessageService
 
         foreach (var address in recipients)
         {
-            if (address.Domain.Equals(InternalDomainPart))
+            if (address.Domain.Equals(_internalDomainPart))
             {
                 dictionary.AddToDictionary(MailAddressType.Internal, address);
                 continue;
             }
 
-            if (AllowSmtpForward && (AllowedForwardAddresses.Contains("*") ||
-                                     AllowedForwardAddresses.Contains(address.Domain)))
+            if (_allowSmtpForward && (_allowedForwardAddresses.Contains("*") ||
+                                     _allowedForwardAddresses.Contains(address.Domain)))
             {
                 dictionary.AddToDictionary(MailAddressType.ForwardExternal, address);
                 continue;

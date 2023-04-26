@@ -1,7 +1,9 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Options;
 using NLog;
 using SmtpForwarder.Application;
 using SmtpForwarder.Domain;
+using SmtpForwarder.Domain.Settings;
 using SmtpForwarder.SmtpReceiverServer.Extensions;
 using SmtpServer;
 using SmtpServer.Mail;
@@ -13,14 +15,14 @@ internal class IncomingMailboxFilter : IMailboxFilter
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-    //todo get from env
-    private static string InternalDomainPart = "test.lab";
+    private readonly string _internalDomainPart;
     
     private readonly IMediator _mediator;
 
-    public IncomingMailboxFilter(IMediator mediator)
+    public IncomingMailboxFilter(IMediator mediator, IOptions<Settings> settingOptions)
     {
         _mediator = mediator;
+        _internalDomainPart = settingOptions.Value.InternalDomain;
     }
 
     public Task<MailboxFilterResult> CanAcceptFromAsync(ISessionContext context, IMailbox from, int size,
@@ -36,7 +38,7 @@ internal class IncomingMailboxFilter : IMailboxFilter
             return Task.FromResult(MailboxFilterResult.NoPermanently);
 
         if (mailBox.LocalAddressPart.Equals(from.User, StringComparison.OrdinalIgnoreCase)
-            && from.Host.Equals(InternalDomainPart))
+            && from.Host.Equals(_internalDomainPart))
             return Task.FromResult(MailboxFilterResult.Yes);
 
         Log.Debug(
