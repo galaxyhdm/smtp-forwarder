@@ -16,6 +16,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForwardingApi", "Forwarding
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramForwarder", "Forwarders\TelegramForwarder\TelegramForwarder.csproj", "{17D34266-3443-4036-A0D8-2E6A79498810}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{78710FB3-7F0C-4CC9-B123-7BE0EE9F2455}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationTests", "Tests\ApplicationTests\ApplicationTests.csproj", "{8B3D2B20-7706-4218-A8AC-6E220D56218F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,9 +54,14 @@ Global
 		{17D34266-3443-4036-A0D8-2E6A79498810}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17D34266-3443-4036-A0D8-2E6A79498810}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17D34266-3443-4036-A0D8-2E6A79498810}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B3D2B20-7706-4218-A8AC-6E220D56218F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B3D2B20-7706-4218-A8AC-6E220D56218F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B3D2B20-7706-4218-A8AC-6E220D56218F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B3D2B20-7706-4218-A8AC-6E220D56218F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{EB3121E1-740E-4556-B308-A609A7D0550B} = {22130E1C-AE43-439B-9AFA-F3A7518B0094}
 		{17D34266-3443-4036-A0D8-2E6A79498810} = {22130E1C-AE43-439B-9AFA-F3A7518B0094}
+		{8B3D2B20-7706-4218-A8AC-6E220D56218F} = {78710FB3-7F0C-4CC9-B123-7BE0EE9F2455}
 	EndGlobalSection
 EndGlobal

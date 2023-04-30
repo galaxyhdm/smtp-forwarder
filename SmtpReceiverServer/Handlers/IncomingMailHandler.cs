@@ -42,7 +42,6 @@ internal class IncomingMailHandler : IMessageStore
         if (message is null)
             return SmtpResponse.SyntaxError;
 
-        // Generate a custom messageId every timexc, to prevent injections and bad chars
         var messageId = message.MessageId;
 
         if (context.Properties.TryGetValue(Constants.SessionStartKey, out DateTime? startTime) && startTime.HasValue)
@@ -58,6 +57,7 @@ internal class IncomingMailHandler : IMessageStore
 
         Log.Debug($"Handling incoming message ({messageId}) from {transaction.From.AsAddress()}");
 
+        
         //Log.Trace($"Subject={message.Subject}");
         //Log.Trace($"Body={message.TextBody}");
 

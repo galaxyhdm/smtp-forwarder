@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using NLog;
 using SmtpForwarder.Application.Enums;
-using SmtpForwarder.Application.Extensions;
+using SmtpForwarder.Application.Filter;
 using SmtpForwarder.Application.Interfaces.Repositories;
 using SmtpForwarder.Application.Interfaces.Services;
 using SmtpForwarder.Application.Jobs;
@@ -44,7 +44,13 @@ internal class IncomingMessageService : IIncomingMessageService
     public async Task<IncomingMessageResponse> HandleIncomingMessage(MailBox mailBox, MimeMessage message,
         CancellationToken token)
     {
-        var recipients = SortRecipients(message, mailBox);
+        var mailboxAddresses = message.GetRecipients(true).ToHashSet();
+
+        var recipients = RecipientFilter.SortRecipients(
+            mailboxAddresses,
+            _internalDomainPart,
+            _allowSmtpForward,
+            _allowedForwardAddresses); //SortRecipients(message, mailBox);
 
         if (recipients.Count == 0)
         {
@@ -69,34 +75,6 @@ internal class IncomingMessageService : IIncomingMessageService
         _forwardingService.EnqueueForwardingRequest(new ForwardingRequest(mailBox, message, recipients));
 
         return IncomingMessageResponse.Ok;
-    }
-
-    private Dictionary<MailAddressType, List<MailboxAddress>> SortRecipients(MimeMessage message, MailBox mailBox)
-    {
-        var dictionary = new Dictionary<MailAddressType, List<MailboxAddress>>();
-        var recipients = message.GetRecipients(true);
-        if (recipients is null || recipients.Count == 0)
-            return dictionary;
-
-        foreach (var address in recipients)
-        {
-            if (address.Domain.Equals(_internalDomainPart))
-            {
-                dictionary.AddToDictionary(MailAddressType.Internal, address);
-                continue;
-            }
-
-            if (_allowSmtpForward && (_allowedForwardAddresses.Contains("*") ||
-                                     _allowedForwardAddresses.Contains(address.Domain)))
-            {
-                dictionary.AddToDictionary(MailAddressType.ForwardExternal, address);
-                continue;
-            }
-
-            dictionary.AddToDictionary(MailAddressType.Blocked, address);
-        }
-
-        return dictionary;
     }
 
     private void PrintBlocked(Dictionary<MailAddressType, List<MailboxAddress>> dictionary, string messageId)
