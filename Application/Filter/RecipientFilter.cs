@@ -1,4 +1,5 @@
-﻿using MimeKit;
+﻿using System.Globalization;
+using MimeKit;
 using SmtpForwarder.Application.Enums;
 using SmtpForwarder.Application.Extensions;
 
@@ -6,6 +7,8 @@ namespace SmtpForwarder.Application.Filter;
 
 public static class RecipientFilter
 {
+    private const string DomainWildcard = "*";
+
     public static Dictionary<MailAddressType, List<MailboxAddress>> SortRecipients(HashSet<MailboxAddress>? recipients, 
         string internalDomain, bool allowSmtpForward, List<string> allowedForwardAddresses)
     {
@@ -26,7 +29,7 @@ public static class RecipientFilter
         List<string> allowedForwardAddresses)
     {
         if (address.Domain.Equals(internalDomain)) return MailAddressType.Internal;
-        if (allowSmtpForward && (allowedForwardAddresses.Contains("*") ||
+        if (allowSmtpForward && (allowedForwardAddresses.Contains(DomainWildcard) ||
                                  allowedForwardAddresses.Contains(address.Domain)))
             return MailAddressType.ForwardExternal;
         return MailAddressType.Blocked;

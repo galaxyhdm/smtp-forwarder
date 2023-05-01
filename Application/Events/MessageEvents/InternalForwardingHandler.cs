@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
 using MediatR;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -6,17 +6,18 @@ using NLog;
 using SmtpForwarder.Application.Events.ForwardingAddressEvents;
 using SmtpForwarder.Application.Events.PermissionEvents;
 using SmtpForwarder.Application.Extensions;
+using SmtpForwarder.Application.Filter;
 using SmtpForwarder.Application.Interfaces.Services;
 using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
 using SmtpForwarder.Domain.Settings;
+using TraceLevel = SmtpForwarder.Application.Utils.TraceLevel;
 
 namespace SmtpForwarder.Application.Events.MessageEvents;
 
 public record InternalForwardingRequest
     (MailBox MailBox, MimeMessage Message, List<MailboxAddress> Addresses, Guid RequestId) : IRequest<bool>;
 
-[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 public class InternalForwardingHandler : IRequestHandler<InternalForwardingRequest, bool>
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -42,40 +43,44 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
 
         if (addresses.Count == 0) return false;
 
-        var localParts = addresses
-            .Where(address => address.Domain.Equals(_internalDomainPart))
-            .Select(address => address.LocalPart).ToList();
+        // Map to filter objects
+        var filterAddresses = addresses.Select(address => new RecipientFilterAddress(address)).ToList();
+        var filterLocalParts = filterAddresses.Select(address => address.LocalPart).ToList();
 
         // Get corresponding database entries 
-        var forwardingAddresses = await _mediator.Send(new GetForwardingAddressByList(localParts), cancellationToken);
-        PrintNotInDatabase(localParts, forwardingAddresses, message.MessageId);
+        var forwardingAddresses =
+            await _mediator.Send(new GetForwardingAddressByList(filterLocalParts), cancellationToken);
 
-        var allowedAddresses = await CheckPermission(cancellationToken, forwardingAddresses, mailBox);
-        PrintMissingPermission(forwardingAddresses, allowedAddresses, message.MessageId);
 
-        //Todo: Make env:
-        const string mainFolder = "files";
-        var folder = Path.Combine(mainFolder, requestId.ToString());
-
-        var attachmentIds = new List<string>();
-        foreach (var messageAttachment in message.Attachments.OfType<MimePart>())
+        async Task<RecipientFilterAddress> SetPermission(RecipientFilterAddress address)
         {
-            var id = messageAttachment.ContentId.EscapePath();
-            var filePath = Path.Combine(folder, $"{id}");
-            if (File.Exists(filePath))
-                attachmentIds.Add(id);
+            address.HasPermission = await CheckPermission(address.ForwardingAddress, mailBox, cancellationToken);
+            return address;
         }
 
-        foreach (var forwardingAddress in allowedAddresses)
+        var allowedAddresses = filterAddresses.Select(address => (
+                Address: address,
+                ForwardingAddress: forwardingAddresses.FirstOrDefault(forwardingAddress =>
+                    forwardingAddress.LocalAddressPart == address.LocalPart)
+            ))
+            .Select(tuple => tuple.Address.SetForwardingAddress(tuple.ForwardingAddress))
+            .Where(address => address.InDatabase)
+            .Select(async t => await SetPermission(t))
+            .Select(task => task.Result)
+            .Where(address => address.HasPermission)
+            .ToList();
+
+        PrintMessages(filterAddresses, message);
+
+        var attachmentIds = GetAttachmentIds(requestId, message);
+
+        foreach (var recipientFilterAddress in allowedAddresses.Where(address => address.ForwardingAddress is not null))
         {
+            var forwardingAddress = recipientFilterAddress.ForwardingAddress!;
+
             if (!forwardingAddress.ForwardTargetId.HasValue)
             {
-                Log.Warn(
-                    "Could not forward message ({} | {}) with forwarding address ({} | {}), because no forwarding-target is assigned!",
-                    requestId, message.MessageId, forwardingAddress.LocalAddressPart, forwardingAddress.Id);
-
-                ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Warn, "forwarding", "try-forward-1",
-                    $"Could not forward message with forwarding address ({forwardingAddress.LocalAddressPart}), because no forwarding-target is assigned!");
+                PrintTargetNotAssigned(requestId, message, forwardingAddress);
                 continue;
             }
 
@@ -91,49 +96,74 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
                 .ForwardMessage(message, attachmentIds, requestId);
         }
 
-        //todo: handle forward
         return true;
     }
 
-    private async Task<List<ForwardingAddress>> CheckPermission(CancellationToken cancellationToken,
-        IEnumerable<ForwardingAddress> forwardingAddresses, MailBox mailBox)
+    private static List<string> GetAttachmentIds(Guid requestId, MimeMessage message)
     {
-        var allowedAddresses = new List<ForwardingAddress>();
-        foreach (var forwardingAddress in forwardingAddresses)
+        //Todo: Make env:
+        const string mainFolder = "files";
+        var folder = Path.Combine(mainFolder, requestId.ToString());
+
+        var attachmentIds = new List<string>();
+        foreach (var messageAttachment in message.Attachments.OfType<MimePart>())
         {
-            var result = await _mediator.Send(
-                new ForwardingAddressPermissionCheck(mailBox.Owner, forwardingAddress),
-                cancellationToken);
-            if (!result) continue;
-            allowedAddresses.Add(forwardingAddress);
+            var id = messageAttachment.ContentId.EscapePath();
+            var filePath = Path.Combine(folder, $"{id}");
+            if (File.Exists(filePath))
+                attachmentIds.Add(id);
         }
 
-        return allowedAddresses;
+        return attachmentIds;
     }
 
-    private void PrintNotInDatabase(IEnumerable<string> all, IEnumerable<ForwardingAddress> found,
-        string messageMessageId)
+    private async Task<bool> CheckPermission(ForwardingAddress? forwardingAddress,
+        MailBox mailBox, CancellationToken cancellationToken)
     {
-        foreach (var address in all.Except(found.Select(address => address.LocalAddressPart)))
-        {
-            Log.Trace("Ignoring internal mail address {}, db-entry not found!",
-                address);
+        if (forwardingAddress is null) return false;
+        return await _mediator.Send(
+            new ForwardingAddressPermissionCheck(mailBox.Owner, forwardingAddress),
+            cancellationToken);
+    }
 
-            ProcessTraceBucket.Get.LogTrace(messageMessageId, TraceLevel.Warn, "forwarding", "not-found-1",
-                $"Could not found internal mail address: {address}");
+    private static void PrintMessages(List<RecipientFilterAddress> filterAddresses, MimeMessage message)
+    {
+        foreach (var recipientFilterAddress in filterAddresses)
+        {
+            if (!recipientFilterAddress.InDatabase)
+                PrintNotInDatabase(recipientFilterAddress.LocalPart, message.MessageId);
+            else if (!recipientFilterAddress.HasPermission)
+                PrintMissingPermission(recipientFilterAddress.ForwardingAddress, message.MessageId);
         }
     }
 
-    private void PrintMissingPermission(IEnumerable<ForwardingAddress> all, IEnumerable<ForwardingAddress> allowed,
-        string messageMessageId)
+    private static void PrintNotInDatabase(string address, string messageMessageId)
     {
-        foreach (var address in all.Except(allowed))
-        {
-            Log.Trace("Ignoring internal mail address {} ({}), because of missing permissions!",
-                address.LocalAddressPart, address.Id);
+        Log.Trace("Ignoring internal mail address {}, db-entry not found!",
+            address);
 
-            ProcessTraceBucket.Get.LogTrace(messageMessageId, TraceLevel.Warn, "forwarding", "not-found-2",
-                $"Could not found internal mail address: {address.LocalAddressPart}");
-        }
+        ProcessTraceBucket.Get.LogTrace(messageMessageId, TraceLevel.Warn, "forwarding", "not-found-1",
+            $"Could not found internal mail address: {address}");
     }
+
+    private static void PrintMissingPermission(ForwardingAddress? address, string messageMessageId)
+    {
+        Debug.Assert(address != null, nameof(address) + " != null");
+        Log.Trace("Ignoring internal mail address {} ({}), because of missing permissions!",
+            address.LocalAddressPart, address.Id);
+
+        ProcessTraceBucket.Get.LogTrace(messageMessageId, TraceLevel.Warn, "forwarding", "not-found-2",
+            $"Could not found internal mail address: {address.LocalAddressPart}");
+    }
+
+    private static void PrintTargetNotAssigned(Guid requestId, MimeMessage message, ForwardingAddress forwardingAddress)
+    {
+        Log.Warn(
+            "Could not forward message ({} | {}) with forwarding address ({} | {}), because no forwarding-target is assigned!",
+            requestId, message.MessageId, forwardingAddress.LocalAddressPart, forwardingAddress.Id);
+
+        ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Warn, "forwarding", "try-forward-1",
+            $"Could not forward message with forwarding address ({forwardingAddress.LocalAddressPart}), because no forwarding-target is assigned!");
+    }
+
 }
