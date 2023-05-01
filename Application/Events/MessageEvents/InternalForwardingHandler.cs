@@ -74,7 +74,7 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
 
         var attachmentIds = GetAttachmentIds(requestId, message);
 
-        foreach (var recipientFilterAddress in allowedAddresses.Where(address => address.ForwardingAddress is not null))
+        foreach (var recipientFilterAddress in allowedAddresses)
         {
             var forwardingAddress = recipientFilterAddress.ForwardingAddress!;
 
