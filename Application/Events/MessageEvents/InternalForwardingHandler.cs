@@ -74,8 +74,11 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
 
         var attachmentIds = GetAttachmentIds(requestId, message);
 
+        var stopwatch = new Stopwatch();
+
         foreach (var recipientFilterAddress in allowedAddresses)
         {
+            stopwatch.Restart();
             var forwardingAddress = recipientFilterAddress.ForwardingAddress!;
 
             if (!forwardingAddress.ForwardTargetId.HasValue)
@@ -84,16 +87,19 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
                 continue;
             }
 
-            Log.Debug("Forwarding message ({}) with forwarding address ({} | {}) to target: {}",
+            await _forwardingController.GetForwarder(forwardingAddress.ForwardTargetId.Value)
+                .ForwardMessage(message, attachmentIds, requestId);
+            
+            stopwatch.Stop();
+            
+            Log.Debug("Forwarding message ({}) with address ({} | {}) to target: {} in {}ms",
                 message.MessageId,
                 forwardingAddress.LocalAddressPart, forwardingAddress.Id,
-                forwardingAddress.ForwardTargetId.Value);
+                forwardingAddress.ForwardTargetId.Value,
+                stopwatch.Elapsed.TotalMilliseconds);
 
             ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Info, "forwarding", "try-forward-2",
                 $"Forwarding message with forwarding address ({forwardingAddress.LocalAddressPart})");
-
-            await _forwardingController.GetForwarder(forwardingAddress.ForwardTargetId.Value)
-                .ForwardMessage(message, attachmentIds, requestId);
         }
 
         return true;

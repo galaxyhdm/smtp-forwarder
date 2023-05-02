@@ -47,7 +47,11 @@ public class ForwardingRequest
         var internalTask =
             _mediator.Send(new InternalForwardingRequest(_mailBox, _message, internalAddresses, RequestId));
 
-        await Task.WhenAll(internalTask);
+        var externalTask = _mediator.Send(new ExternalForwardingRequest(RequestId, _message, externalAddresses));
+        
+        await Task.WhenAll(
+            internalTask,
+            externalTask);
 
         var stopTime = DateTime.UtcNow;
         var forwardingTime = (stopTime - startTime).TotalMilliseconds;
