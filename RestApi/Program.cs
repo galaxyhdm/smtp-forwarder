@@ -10,7 +10,7 @@ using SmtpForwarder.SmtpReceiverServer;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add custom settings
-builder.Host.ConfigureAppSettings();
+builder.ConfigureAppSettings();
 
 
 // NLog: Setup NLog for Dependency injection

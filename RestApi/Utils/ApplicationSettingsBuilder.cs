@@ -5,18 +5,15 @@ namespace SmtpForwarder.RestApi.Utils;
 public static class ApplicationSettingsBuilder
 {
 
-    public static IHostBuilder ConfigureAppSettings(this IHostBuilder host)
+    public static WebApplicationBuilder ConfigureAppSettings(this WebApplicationBuilder host)
     {
-        var environment = Env.GetStringDefault("ASPNETCORE_ENVIRONMENT");
+        var environment = host.Environment.EnvironmentName;
 
-        host.ConfigureAppConfiguration((ctx, builder) =>
-        {
-            builder.AddJsonFile("appsettings.json", false, true);
-            builder.AddJsonFile($"appsettings.{environment}.json", true, true);
-            builder.AddJsonFile($"appsettings.{Environment.MachineName}.json", true, true);
-            
-            builder.AddEnvironmentVariables("APP_");
-        });
+        host.Configuration
+            .AddJsonFile("appsettings.json", false, true)
+            .AddJsonFile($"appsettings.{environment}.json", true, true)
+            .AddJsonFile($"appsettings.{Environment.MachineName}.json", true, true)
+            .AddEnvironmentVariables("APP_");
         
         return host;
     }
