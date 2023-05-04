@@ -17,7 +17,7 @@ internal abstract class RootRepositoryBase<TEntity> : IRepository<TEntity> where
 
     protected IQueryable<TEntity> Entities { get; init; }
 
-    protected RootRepositoryBase(DbContext context)
+    protected RootRepositoryBase(AppDbContext context)
     {
         _context = context;
         Entities = context.Set<TEntity>().AsNoTracking().AsQueryable();

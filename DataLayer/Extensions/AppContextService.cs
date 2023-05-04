@@ -28,6 +28,8 @@ public static class AppContextService
         services.AddTransient<IForwardTargetRepository, ForwardTargetRepository>();
         services.AddTransient<IMailBoxRepository, MailBoxRepository>();
         services.AddTransient<IUserRepository, UserRepository>();
+        services.AddTransient<ITraceLogRepository, TraceLogRepository>();
+        services.AddTransient<ITraceLogEntryRepository, TraceLogEntryRepository>();
         return services;
     }
 }

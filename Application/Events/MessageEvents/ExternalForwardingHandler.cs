@@ -5,7 +5,9 @@ using MediatR;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using NLog;
+using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain.Settings;
+using TraceLevel = SmtpForwarder.Application.Utils.TraceLevel;
 
 namespace SmtpForwarder.Application.Events.MessageEvents;
 
@@ -76,6 +78,11 @@ public class ExternalForwardingHandler : IRequestHandler<ExternalForwardingReque
         var milliseconds = stopwatch.Elapsed.TotalMilliseconds;
 
         Log.Debug("Finished external forwarding for mail: {} ({}) in {}ms", message.MessageId, requestId, milliseconds);
+        
+        ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Info, "forwarding-external", 
+            "forward-external-1",
+            "Email was forwarded with an external SMTP server.");
+        
         return true;
     }
 }
