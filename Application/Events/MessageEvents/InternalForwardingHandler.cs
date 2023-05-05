@@ -50,25 +50,8 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
         // Get corresponding database entries 
         var forwardingAddresses =
             await _mediator.Send(new GetForwardingAddressByList(filterLocalParts), cancellationToken);
-
-
-        async Task<RecipientFilterAddress> SetPermission(RecipientFilterAddress address)
-        {
-            address.HasPermission = await CheckPermission(address.ForwardingAddress, mailBox, cancellationToken);
-            return address;
-        }
-
-        var allowedAddresses = filterAddresses.Select(address => (
-                Address: address,
-                ForwardingAddress: forwardingAddresses.FirstOrDefault(forwardingAddress =>
-                    forwardingAddress.LocalAddressPart == address.LocalPart)
-            ))
-            .Select(tuple => tuple.Address.SetForwardingAddress(tuple.ForwardingAddress))
-            .Where(address => address.InDatabase)
-            .Select(async t => await SetPermission(t))
-            .Select(task => task.Result)
-            .Where(address => address.HasPermission)
-            .ToList();
+        
+        var allowedAddresses = GetAllowedAddresses(mailBox, filterAddresses, forwardingAddresses, cancellationToken);
 
         PrintMessages(filterAddresses, message);
 
@@ -89,9 +72,9 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
 
             await _forwardingController.GetForwarder(forwardingAddress.ForwardTargetId.Value)
                 .ForwardMessage(message, attachmentIds, requestId);
-            
+
             stopwatch.Stop();
-            
+
             Log.Debug("Forwarding message ({}) with address ({} | {}) to target: {} in {}ms",
                 message.MessageId,
                 forwardingAddress.LocalAddressPart, forwardingAddress.Id,
@@ -103,6 +86,30 @@ public class InternalForwardingHandler : IRequestHandler<InternalForwardingReque
         }
 
         return true;
+    }
+
+    private List<RecipientFilterAddress> GetAllowedAddresses(MailBox mailBox,
+        List<RecipientFilterAddress> filterAddresses,
+        IEnumerable<ForwardingAddress> forwardingAddresses, CancellationToken cancellationToken)
+    {
+        async Task<RecipientFilterAddress> SetPermission(RecipientFilterAddress address)
+        {
+            address.HasPermission = await CheckPermission(address.ForwardingAddress, mailBox, cancellationToken);
+            return address;
+        }
+
+        var allowedAddresses = filterAddresses.Select(address => (
+                Address: address,
+                ForwardingAddress: forwardingAddresses.FirstOrDefault(forwardingAddress =>
+                    forwardingAddress.LocalAddressPart == address.LocalPart)
+            ))
+            .Select(tuple => tuple.Address.SetForwardingAddress(tuple.ForwardingAddress))
+            .Where(address => address.InDatabase)
+            .Select(async t => await SetPermission(t))
+            .Select(task => task.Result)
+            .Where(address => address.HasPermission)
+            .ToList();
+        return allowedAddresses;
     }
 
     private static List<string> GetAttachmentIds(Guid requestId, MimeMessage message)

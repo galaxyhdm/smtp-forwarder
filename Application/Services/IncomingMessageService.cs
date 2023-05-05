@@ -1,10 +1,8 @@
-﻿using MediatR;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using MimeKit;
 using NLog;
 using SmtpForwarder.Application.Enums;
 using SmtpForwarder.Application.Filter;
-using SmtpForwarder.Application.Interfaces.Repositories;
 using SmtpForwarder.Application.Interfaces.Services;
 using SmtpForwarder.Application.Jobs;
 using SmtpForwarder.Application.Utils;
@@ -20,20 +18,11 @@ internal class IncomingMessageService : IIncomingMessageService
     private readonly string _internalDomainPart;
     private readonly bool _allowSmtpForward;
     private readonly List<string> _allowedForwardAddresses;
-    
-    private readonly IMailBoxRepository _mailBoxRepository;
-    private readonly IForwardingAddressRepository _forwardingAddressRepository;
-    private readonly IForwardingService _forwardingService;
-    private readonly IMediator _mediator;
 
-    public IncomingMessageService(IMailBoxRepository mailBoxRepository,
-        IForwardingAddressRepository forwardingAddressRepository, IMediator mediator,
-        IForwardingService forwardingService,
-        IOptions<Settings> settingOptions)
+    private readonly IForwardingService _forwardingService;
+
+    public IncomingMessageService(IForwardingService forwardingService, IOptions<Settings> settingOptions)
     {
-        _mailBoxRepository = mailBoxRepository;
-        _forwardingAddressRepository = forwardingAddressRepository;
-        _mediator = mediator;
         _forwardingService = forwardingService;
         
         _internalDomainPart = settingOptions.Value.InternalDomain;
