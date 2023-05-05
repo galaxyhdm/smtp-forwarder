@@ -16,15 +16,30 @@ public class ProcessTraceBucket
             end));
     }
 
+    /// <summary>
+    /// Gets all ProcessTraces with the given processIdentifier
+    /// </summary>
+    /// <param name="processIdentifier"></param>
+    /// <returns>A list with processTraces</returns>
     public List<ProcessTrace> GetTraces(string processIdentifier) =>
         _processTraces
             .Where(trace => trace.ProcessIdentifier.Equals(processIdentifier))
             .OrderBy(trace => trace.TraceTime)
             .ToList();
 
+    /// <summary>
+    /// Removes all ProcessTraces with the given processIdentifier
+    /// </summary>
+    /// <param name="processIdentifier"></param>
     public void RemoveTraces(string processIdentifier) =>
         _processTraces.RemoveAll(trace => trace.ProcessIdentifier.Equals(processIdentifier));
 
+    /// <summary>
+    /// Returns a Dictionary with all ended process traces.
+    /// Key: The ProcessIdentifier
+    /// Value: A List with all ProcessTraces with the same ProcessIdentifier 
+    /// </summary>
+    /// <returns>A Dictionary with the ProcessIdentifier as key and a list with ProcessTraces</returns>
     public Dictionary<string, IEnumerable<ProcessTrace>> GetEndedTraces()
     {
         var endedTraces = _processTraces.Where(trace => trace.IsEnd).Select(trace => trace.ProcessIdentifier).ToList();
