@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SmtpForwarder.Application.Authorization;
 using SmtpForwarder.Application.Forwarders;
 using SmtpForwarder.Application.Interfaces.Authorization;
 using SmtpForwarder.Application.Interfaces.Services;
+using SmtpForwarder.Application.ServiceProxy;
 using SmtpForwarder.Application.Services;
 
 namespace SmtpForwarder.Application;
@@ -26,9 +26,17 @@ public static class ServiceInjector
         //services.AddSingleton<IAuthTokenGenerator, AuthTokenGenerator>();
         return services;
     }
+
+    public static IServiceCollection AddSingletonServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IServiceProviderProxy, BasicServiceProviderProxy>();
+
+        return services;
+    }
     
     public static void WarmUp(this IServiceProvider app)
     {
         app.GetRequiredService<IForwardingController>();
+        ServiceLocator.Initialize(app.GetRequiredService<IServiceProviderProxy>());
     } 
 }

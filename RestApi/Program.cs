@@ -39,6 +39,7 @@ builder.Services.AddEvents(typeof(ServiceInjector).Assembly);
 
 // Services
 builder.Services.AddAuthorizationHandlers();
+builder.Services.AddSingletonServices();
 builder.Services.AddSmtpService();
 
 var app = builder.Build();
