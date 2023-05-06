@@ -57,8 +57,8 @@ public class ForwardingRequest
         var forwardingTime = (stopTime - startTime).TotalMilliseconds;
         Log.Info("Finished email forwarding for mail: {} ({}) in {}ms", _message.MessageId, RequestId,
             forwardingTime);
-        ProcessTraceBucket.Get.LogTrace(_message.MessageId, TraceLevel.Info, "forwarding", "end-forwarding",
-            $"Finished email forwarding in {forwardingTime}ms", end: true);
+        ProcessTraceBucket.Get.EndTraceLog(_message.MessageId, TraceLevel.Info, "forwarding", "end-forwarding",
+            $"Finished email forwarding in {forwardingTime}ms", _mailBox);
 
         await CleanUp();
         DisposeMimeMessage(message: _message);

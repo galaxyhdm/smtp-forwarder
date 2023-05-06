@@ -16,7 +16,7 @@ internal sealed class MailBoxRepository : RootRepositoryBase<MailBox>, IMailBoxR
 
         BeforeAdd += (_, args) => args.Entity.LogCreatedUpdated(true);
         BeforeUpdate += (_, args) => args.Entity.LogCreatedUpdated();
-        BeforeSave += (_, args) => logger.LogDebug("Saving mailbox {} - {}",
+        BeforeSave += (_, args) => logger.LogTrace("Saving mailbox {} - {}",
             args.Entity.MailBoxId,
             args.Entity.LocalAddressPart);
     }

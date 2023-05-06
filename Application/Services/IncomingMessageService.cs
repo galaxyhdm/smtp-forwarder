@@ -44,8 +44,8 @@ internal class IncomingMessageService : IIncomingMessageService
         if (recipients.Count == 0)
         {
             Log.Debug("No recipients found!");
-            ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Warn, "handling", "no-valid-1",
-                "No recipients found", end: true);
+            ProcessTraceBucket.Get.EndTraceLog(message.MessageId, TraceLevel.Warn, "handling", "no-valid-1",
+                "No recipients found", mailBox);
             return IncomingMessageResponse.NoValidRecipientsGiven;
         }
 
@@ -56,8 +56,8 @@ internal class IncomingMessageService : IIncomingMessageService
         if (countAccepted == 0)
         {
             Log.Debug("No recipients found!");
-            ProcessTraceBucket.Get.LogTrace(message.MessageId, TraceLevel.Warn, "handling", "no-valid-2",
-                "No recipients found", end: true);
+            ProcessTraceBucket.Get.EndTraceLog(message.MessageId, TraceLevel.Warn, "handling", "no-valid-2",
+                "No recipients found", mailBox);
             return IncomingMessageResponse.NoValidRecipientsGiven;
         }
 

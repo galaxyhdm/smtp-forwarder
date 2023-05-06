@@ -17,7 +17,7 @@ internal sealed class TraceLogEntryRepository: RootRepositoryBase<TraceLogEntry>
         
         BeforeAdd += (_, args) => args.Entity.LogCreatedUpdated(true);
         BeforeUpdate += (_, args) => args.Entity.LogCreatedUpdated();
-        BeforeSave += (_, args) => logger.LogDebug("Saving trace_log_entry {}",
+        BeforeSave += (_, args) => logger.LogTrace("Saving trace_log_entry {}",
             args.Entity.Id);
     }
 }

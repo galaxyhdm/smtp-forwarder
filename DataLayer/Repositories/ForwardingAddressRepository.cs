@@ -18,7 +18,7 @@ internal sealed class ForwardingAddressRepository : RootRepositoryBase<Forwardin
 
         BeforeAdd += (_, args) => args.Entity.LogCreatedUpdated(true);
         BeforeUpdate += (_, args) => args.Entity.LogCreatedUpdated();
-        BeforeSave += (_, args) => logger.LogDebug("Saving forwarding_address {} - {}",
+        BeforeSave += (_, args) => logger.LogTrace("Saving forwarding_address {} - {}",
             args.Entity.Id,
             args.Entity.LocalAddressPart);
     }

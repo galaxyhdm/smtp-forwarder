@@ -1,20 +1,41 @@
 ﻿using System.Globalization;
+using MediatR;
+using NLog;
+using SmtpForwarder.Application.Events.TraceLogEvents;
+using SmtpForwarder.Application.ServiceProxy;
+using SmtpForwarder.Domain;
 
 namespace SmtpForwarder.Application.Utils;
 
 public class ProcessTraceBucket
 {
-    private const bool Log = false;
+    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+    
+    private const bool Logging = true;
     
     private readonly List<ProcessTrace> _processTraces = new();
 
     public void LogTrace(string processIdentifier, TraceLevel level, string step, string processCode, string message,
-        bool end = false)
+        bool end = false, MailBox? mailBox = null)
     {
-        if(!Log) return;
+        if(!Logging) return;
         _processTraces.Add(new ProcessTrace(processIdentifier, level, step, message, processCode, DateTime.UtcNow,
             end));
+        
+        if(!end) return;
+        if (mailBox is null)
+            Log.Warn("A ended trace-log without a mailbox, is not recommended, because of the missing link.");
+
+
+        var processTraces = GetTraces(processIdentifier);
+
+        var mediator = ServiceLocator.ServiceProvider.GetService<IMediator>();
+        mediator?.Send(new SaveTraceLogRequest(processIdentifier, processTraces, mailBox));
     }
+
+    public void EndTraceLog(string processIdentifier, TraceLevel level, string step, string processCode, string message,
+        MailBox mailBox) =>
+        LogTrace(processIdentifier, level, step, processCode, message, true, mailBox);
 
     /// <summary>
     /// Gets all ProcessTraces with the given processIdentifier

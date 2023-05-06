@@ -13,7 +13,7 @@ internal sealed class UserRepository : RootRepositoryBase<User>, IUserRepository
 
         BeforeAdd += (_, args) => args.Entity.LogCreatedUpdated(true);
         BeforeUpdate += (_, args) => args.Entity.LogCreatedUpdated();
-        BeforeSave += (_, args) => logger.LogDebug("Saving user {} - {}",
+        BeforeSave += (_, args) => logger.LogTrace("Saving user {} - {}",
             args.Entity.UserId,
             args.Entity.Username);
     }

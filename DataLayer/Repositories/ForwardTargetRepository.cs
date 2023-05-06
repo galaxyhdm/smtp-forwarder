@@ -17,7 +17,7 @@ internal sealed class ForwardTargetRepository : RootRepositoryBase<ForwardTarget
 
         BeforeAdd += (_, args) => args.Entity.LogCreatedUpdated(true);
         BeforeUpdate += (_, args) => args.Entity.LogCreatedUpdated();
-        BeforeSave += (_, args) => logger.LogDebug("Saving forward_target {} - {}",
+        BeforeSave += (_, args) => logger.LogTrace("Saving forward_target {} - {}",
             args.Entity.Id,
             args.Entity.Name);
     }
