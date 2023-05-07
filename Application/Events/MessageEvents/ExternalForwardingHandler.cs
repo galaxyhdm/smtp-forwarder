@@ -7,7 +7,7 @@ using MimeKit;
 using NLog;
 using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain.Settings;
-using TraceLevel = SmtpForwarder.Application.Utils.TraceLevel;
+using TraceLevel = SmtpForwarder.Domain.Enums.TraceLevel;
 
 namespace SmtpForwarder.Application.Events.MessageEvents;
 

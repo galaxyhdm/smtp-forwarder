@@ -6,6 +6,7 @@ using SmtpForwarder.Application.Enums;
 using SmtpForwarder.Application.Events.MessageEvents;
 using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
+using SmtpForwarder.Domain.Enums;
 using SmtpForwarder.SmtpReceiverServer.Extensions;
 using SmtpServer;
 using SmtpServer.Mail;

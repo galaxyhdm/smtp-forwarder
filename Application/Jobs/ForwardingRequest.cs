@@ -7,6 +7,7 @@ using SmtpForwarder.Application.Events.MessageEvents;
 using SmtpForwarder.Application.Extensions;
 using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
+using SmtpForwarder.Domain.Enums;
 
 namespace SmtpForwarder.Application.Jobs;
 

@@ -40,7 +40,9 @@ public class SaveTraceLogHandler : IRequestHandler<SaveTraceLogRequest, bool>
 
         foreach (var traceLogEntry in processTraces
                      .Select(processTrace =>
-                         TraceLogEntry.CreateTraceLogEntry(processTrace.TraceTime,
+                         TraceLogEntry.CreateTraceLogEntry(
+                             processTrace.TraceTime,
+                             processTrace.Level,
                              processTrace.ProcessCode,
                              processTrace.Step,
                              processTrace.Message,

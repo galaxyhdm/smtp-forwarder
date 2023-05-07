@@ -1,4 +1,6 @@
-﻿namespace SmtpForwarder.Domain;
+﻿using SmtpForwarder.Domain.Enums;
+
+namespace SmtpForwarder.Domain;
 
 public class TraceLogEntry : EntityBase
 {
@@ -6,7 +8,8 @@ public class TraceLogEntry : EntityBase
     public Guid Id { get; }
 
     public DateTime TraceTime { get; }
-    //TODO: Set TraceLevel (move to Domain-Project) public
+
+    public TraceLevel TraceLevel { get; }
 
     public string ProcessCode { get; }
     public string Step { get; }
@@ -22,8 +25,8 @@ public class TraceLogEntry : EntityBase
     {
     }
 
-    private TraceLogEntry(Guid id, DateTime traceTime, string processCode, string step, string message, bool isEnd,
-        Guid traceLogId)
+    private TraceLogEntry(Guid id, DateTime traceTime, TraceLevel traceLevel, string processCode, string step,
+        string message, bool isEnd, Guid traceLogId)
     {
         Id = id;
         TraceTime = traceTime;
@@ -31,15 +34,16 @@ public class TraceLogEntry : EntityBase
         Step = step;
         Message = message;
         IsEnd = isEnd;
+        TraceLevel = traceLevel;
 
         LinkWithTraceLog(traceLogId);
     }
 
-    public static TraceLogEntry CreateTraceLogEntry(DateTime traceTime, string processCode, string step, string message,
-        bool isEnd, Guid traceLogId)
+    public static TraceLogEntry CreateTraceLogEntry(DateTime traceTime, TraceLevel traceLevel, string processCode,
+        string step, string message, bool isEnd, Guid traceLogId)
     {
         var id = Guid.NewGuid();
-        return new TraceLogEntry(id, traceTime, processCode, step, message, isEnd, traceLogId);
+        return new TraceLogEntry(id, traceTime, traceLevel, processCode, step, message, isEnd, traceLogId);
     }
 
     private void LinkWithTraceLog(Guid traceLogId) =>

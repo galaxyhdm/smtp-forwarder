@@ -4,6 +4,7 @@ using NLog;
 using SmtpForwarder.Application.Events.TraceLogEvents;
 using SmtpForwarder.Application.ServiceProxy;
 using SmtpForwarder.Domain;
+using SmtpForwarder.Domain.Enums;
 
 namespace SmtpForwarder.Application.Utils;
 
@@ -133,12 +134,4 @@ public class ProcessTrace
             $"{TraceTime.ToString(CultureInfo.CurrentCulture)} - {Level}: {ProcessIdentifier}#{Step}#{ProcessCode}: {Message} | {IsEnd}";
     }
 
-}
-
-public enum TraceLevel
-{
-    Debug = 1,
-    Info = 2,
-    Warn = 3,
-    Error = 4
 }

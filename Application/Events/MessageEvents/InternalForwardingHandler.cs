@@ -11,7 +11,7 @@ using SmtpForwarder.Application.Interfaces.Services;
 using SmtpForwarder.Application.Utils;
 using SmtpForwarder.Domain;
 using SmtpForwarder.Domain.Settings;
-using TraceLevel = SmtpForwarder.Application.Utils.TraceLevel;
+using TraceLevel = SmtpForwarder.Domain.Enums.TraceLevel;
 
 namespace SmtpForwarder.Application.Events.MessageEvents;
 

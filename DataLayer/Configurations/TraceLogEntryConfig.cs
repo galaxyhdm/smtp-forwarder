@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmtpForwarder.Domain;
+using SmtpForwarder.Domain.Enums;
 
 namespace SmtpForwarder.DataLayer.Configurations;
 
@@ -16,6 +18,10 @@ public class TraceLogEntryConfig : IEntityTypeConfiguration<TraceLogEntry>
         
         builder.Property(t => t.TraceTime)
             .IsRequired();
+
+        builder.Property(t => t.TraceLevel)
+            .IsRequired()
+            .HasConversion(new EnumToStringConverter<TraceLevel>());
         
         builder.Property(t => t.ProcessCode)
             .IsRequired();
