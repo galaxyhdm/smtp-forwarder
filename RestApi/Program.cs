@@ -12,26 +12,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Add custom settings
 builder.ConfigureAppSettings();
 
-
 // NLog: Setup NLog for Dependency injection
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
 
 // Add services to the container.
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/hOpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// Database
-
+//Settings
 var settings = builder.Configuration.GetRequiredSection("App").Get<Settings>();
 
 builder.Services.Configure<Settings>(
     builder.Configuration.GetRequiredSection("App"));
 
-builder.Services.AddAppContext(settings.ConnectionString);
+// Database
+builder.Services.AddAppContext(settings!.ConnectionString);
 builder.Services.AddRepositories();
 
 // Add application event system
@@ -42,7 +36,17 @@ builder.Services.AddAuthorizationHandlers();
 builder.Services.AddSingletonServices();
 builder.Services.AddSmtpService();
 
+//Controllers
+builder.Services.AddControllers();
+
+// Learn more about configuring Swagger/hOpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
+
+app.Services.MigrateDatabase();
+app.Services.WarmUp();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -57,5 +61,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Services.WarmUp();
 app.Run();

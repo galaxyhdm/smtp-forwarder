@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using NLog;
 using SmtpForwarder.Application.Interfaces.Repositories;
 using SmtpForwarder.DataLayer.Repositories;
 
@@ -7,6 +8,8 @@ namespace SmtpForwarder.DataLayer.Extensions;
 
 public static class AppContextService
 {
+    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+    
     public static IServiceCollection AddAppContext(this IServiceCollection services, string? connectionString)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -14,7 +17,8 @@ public static class AppContextService
         
         services.AddDbContext<AppDbContext>(
             options => {
-                options.UseNpgsql(connectionString)
+                options.UseNpgsql(connectionString, builder => 
+                        builder.MigrationsHistoryTable("_EFMigrationsHistory"))
                     .UseSnakeCaseNamingConvention()
                     .EnableSensitiveDataLogging(true)
                     .EnableDetailedErrors(true);
@@ -31,5 +35,22 @@ public static class AppContextService
         services.AddTransient<ITraceLogRepository, TraceLogRepository>();
         services.AddTransient<ITraceLogEntryRepository, TraceLogEntryRepository>();
         return services;
+    }
+
+    public static void MigrateDatabase(this IServiceProvider serviceProvider)
+    {
+        // Migrate latest database changes during startup
+        var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
+        var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
+        if (!pendingMigrations.Any())
+            return;
+        
+        Log.Debug("Migrating database...");
+        
+        foreach (var pendingMigration in pendingMigrations)
+            Log.Trace("PendingMigration: {}", pendingMigration);
+        
+        dbContext.Database.Migrate();
+        Log.Debug("Finished database migration.");
     }
 }
